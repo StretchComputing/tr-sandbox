@@ -7,10 +7,7 @@
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
 <script>
   $(function() {
-    console.log("page has loaded");
-    var div = document.createElement('div');
-    $(div).html("Here's some new information we inserted with JavaScript");
-    $(div).appendTo('body');
+    $('<div/>').html("Here's some new information we inserted with JavaScript").appendTo('body');
   });
 </script>
 </head>
