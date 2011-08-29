@@ -9,6 +9,13 @@
   $(function() {
     $('<div/>').html("Here's some new information we inserted with JavaScript").appendTo('body');
     $('<img/>').attr('src', 'https://stretchsite.appspot.com/images/Logo_NavBar.jpg').appendTo('body');
+    $.ajax({
+      url: '/sandbox',
+      type: 'PUT',
+      success: function(data) {
+        $('<p/>').html("The following data courtesy of an Ajax PUT action:<br>" + data).appendTo('body');
+      }
+    })
   });
 </script>
 </head>
