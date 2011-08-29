@@ -1,4 +1,4 @@
-package com.stretchcom.sandbox;
+package com.stretchcom.sandbox.server;
 
 import java.io.IOException;
 import javax.servlet.http.*;
