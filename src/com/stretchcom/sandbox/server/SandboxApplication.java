@@ -17,6 +17,8 @@ public class SandboxApplication extends Application {
 
         // Defines only one route.
         router.attach("/sandbox", SandboxResource.class);
+        router.attach("/users", UsersResource.class);
+        router.attach("/users/{key}", UsersResource.class);
 
         return router;
     }
