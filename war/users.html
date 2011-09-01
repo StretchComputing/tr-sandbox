@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>All Users</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0b2/jquery.mobile-1.0b2.min.css" />
+<script src="http://code.jquery.com/jquery-1.6.2.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.0b2/jquery.mobile-1.0b2.min.js"></script>
+<script src="/js/script.js"></script>
+<script>
+  $('#all_users').live('pagecreate', function() {
+    $.getJSON('/users', function(data) {
+      $('#all_users').children('[data-role="content"]').html(data['message']);
+    });
+  });
+
+  $('#create_user').live('pagecreate', function() {
+    $('#new_user_form').submit(submit_new_user);
+  });
+
+  function submit_new_user() {
+    var json = JSON.stringify($(this).serializeJSON());
+    $.ajax({
+      type : 'POST',
+      url : '/users',
+      contentType : 'application/json',
+      data : json,
+      success : function(data) {
+        display_user(data);
+      },
+      dataType : 'json'
+    });
+    return false;
+  }
+
+  function display_user(data) {
+    $('#user').children('[data-role="content"]').html(data['first_name']);
+    $.mobile.changePage('#user');
+  }
+</script>
+</head>
+
+<body>
+  <div data-role="page" id="all_users">
+    <div data-role="header">
+      <h1>All Users</h1>
+    </div>
+    <div data-role="content"></div>
+    <div data-role="footer">
+      <a href="#create_user">Create a New User</a>
+    </div>
+  </div>
+
+  <div data-role="page" id="create_user">
+    <div data-role="header">
+      <h1>Create a New User</h1>
+    </div>
+    <div data-role="content">
+      <form id="new_user_form">
+        <p>
+          <label for="first_name">First Name:</label> <input type="text" name="first_name" id="first_name">
+        </p>
+        <p>
+          <label for="last_name">Last Name:</label> <input type="text" name="last_name" id="last_name">
+        </p>
+        <p>
+          <label for="email_address">Email Address:</label> <input type="email" name="email_address" id="email_address"
+            placeholder="Please enter a valid email address and check it carefully.">
+        </p>
+        <p>
+          <input type="submit" value="Create User"> <input type="button" value="Cancel">
+        </p>
+      </form>
+    </div>
+    <div data-role="footer"></div>
+  </div>
+
+  <div data-role="page" id="user">
+    <div data-role="header">
+      <h1>User</h1>
+    </div>
+    <div data-role="content"></div>
+    <div data-role="footer"></div>
+  </div>
+
+</body>
+</html>
