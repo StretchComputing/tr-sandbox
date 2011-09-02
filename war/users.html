@@ -4,31 +4,32 @@
 <meta charset="UTF-8">
 <title>All Users</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0b2/jquery.mobile-1.0b2.min.css" />
+<link rel="stylesheet" href="http://code.jquery.com/mobile/latest/jquery.mobile.css" />
 <script src="http://code.jquery.com/jquery-1.6.2.min.js"></script>
-<script src="http://code.jquery.com/mobile/1.0b2/jquery.mobile-1.0b2.min.js"></script>
+<script src="http://code.jquery.com/mobile/latest/jquery.mobile.js"></script>
 <script src="/js/script.js"></script>
 </head>
 
 <body>
   <script>
-      function display_users(data) {
-        var ul = $('#all_users').find('[data-role="listview"]');
+      function index(data) {
+        var ul = $('#index').find('[data-role="listview"]');
+        ul.html('');
         for (i = 0; i < data['users'].length; i++) {
           var u = data['users'][i];
           var display = u['first_name'] + ' ' + u['last_name'] + ', ' + u['email_address'];
-          ul.append($('<li/>').html($('<a/>').attr('href', '#user/' + u['user_id']).html(display)));
+          ul.append('<li><a href="#show/' + u['user_id'] + '">' + display + '</a></li>');
         }
         ul.listview('refresh');
       }
 
-      $('#all_users').live('pagecreate', function() {
+      $('#index').live('pagecreate', function() {
         $.getJSON('/users', function(data) {
-          display_users(data);
+          index(data);
         });
       });
     </script>
-  <div data-role="page" id="all_users">
+  <div data-role="page" id="index">
     <div data-role="header">
       <h1>All Users</h1>
     </div>
@@ -37,7 +38,13 @@
       </ul>
     </div>
     <div data-role="footer">
-      <a href="#create_user">Create a New User</a>
+      <div data-role="navbar">
+        <ul>
+          <li>
+            <a href="#create">Create a New User</a>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -57,11 +64,11 @@
         return false;
       }
 
-      $('#create_user').live('pagecreate', function() {
+      $('#create').live('pagecreate', function() {
         $('#new_user_form').submit(submit_new_user);
       });
     </script>
-  <div data-role="page" id="create_user">
+  <div data-role="page" id="create">
     <div data-role="header">
       <h1>Create a New User</h1>
     </div>
@@ -78,27 +85,37 @@
             placeholder="Please enter a valid email address and check it carefully.">
         </p>
         <p>
-          <input type="submit" value="Create User"> <input type="button" value="Cancel">
+          <input type="submit" value="Create User">
         </p>
       </form>
     </div>
-    <div data-role="footer"></div>
+    <div data-role="footer">
+      <div data-role="navbar">
+        <ul>
+          <li><a href="#index">Cancel</a></li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <script>
       function display_user(data) {
-        $('#user').children('[data-role="content"]').html(
+        $('#show').children('[data-role="content"]').html(
             data['first_name'] + '<br>' + data['last_name'] + '<br>' + data['email_address'] + '<br>' + data['key']);
-        $.mobile.changePage('#user');
+        $.mobile.changePage('#show');
       }
     </script>
-  <div data-role="page" id="user">
+  <div data-role="page" id="show">
     <div data-role="header">
       <h1>User</h1>
     </div>
     <div data-role="content"></div>
     <div data-role="footer">
-      <button>All Users</button>
+      <div data-role="navbar">
+        <ul>
+          <li><a href="#index">All Users</a></li>
+        </ul>
+      </div>
     </div>
   </div>
 
