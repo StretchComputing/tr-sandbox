@@ -8,60 +8,59 @@
 <script src="http://code.jquery.com/jquery-1.6.2.min.js"></script>
 <script src="http://code.jquery.com/mobile/1.0b2/jquery.mobile-1.0b2.min.js"></script>
 <script src="/js/script.js"></script>
-<script>
-  $('#all_users').live('pagecreate', function() {
-    $.getJSON('/users', function(data) {
-      display_users(data);
-    });
-  });
-  
-  function display_users(data) {
-    var content_div = $('#all_users').children('[data-role="content"]');
-    for (i = 0; i < data['users'].length; i++) {
-      var u = data['users'][i];
-      var display = u['first_name'] + ' ' + u['last_name'] + ', ' + u['email_address'];
-      $('<div/>').html($('<a/>').attr('href', '#user/' + u['user_id']).html(display)).appendTo(content_div);
-    }
-  }
-
-  $('#create_user').live('pagecreate', function() {
-    $('#new_user_form').submit(submit_new_user);
-  });
-
-  function submit_new_user() {
-    var json = JSON.stringify($(this).serializeJSON());
-    $.ajax({
-      type : 'POST',
-      url : '/users',
-      contentType : 'application/json',
-      data : json,
-      success : function(data) {
-        display_user(data);
-      },
-      dataType : 'json'
-    });
-    return false;
-  }
-
-  function display_user(data) {
-    $('#user').children('[data-role="content"]').html(
-        data['first_name'] + '<br>' + data['last_name'] + '<br>' + data['email_address'] + '<br>' + data['key']);
-    $.mobile.changePage('#user');
-  }
-</script>
 </head>
 
 <body>
+  <script>
+      function display_users(data) {
+        var ul = $('#all_users').find('[data-role="listview"]');
+        for (i = 0; i < data['users'].length; i++) {
+          var u = data['users'][i];
+          var display = u['first_name'] + ' ' + u['last_name'] + ', ' + u['email_address'];
+          ul.append($('<li/>').html($('<a/>').attr('href', '#user/' + u['user_id']).html(display)));
+        }
+        ul.listview('refresh');
+      }
+
+      $('#all_users').live('pagecreate', function() {
+        $.getJSON('/users', function(data) {
+          display_users(data);
+        });
+      });
+    </script>
   <div data-role="page" id="all_users">
     <div data-role="header">
       <h1>All Users</h1>
     </div>
-    <div data-role="content"></div>
+    <div data-role="content">
+      <ul data-role="listview">
+      </ul>
+    </div>
     <div data-role="footer">
       <a href="#create_user">Create a New User</a>
     </div>
   </div>
 
+  <script>
+      function submit_new_user() {
+        var json = JSON.stringify($(this).serializeJSON());
+        $.ajax({
+          type : 'POST',
+          url : '/users',
+          contentType : 'application/json',
+          data : json,
+          success : function(data) {
+            display_user(data);
+          },
+          dataType : 'json'
+        });
+        return false;
+      }
+
+      $('#create_user').live('pagecreate', function() {
+        $('#new_user_form').submit(submit_new_user);
+      });
+    </script>
   <div data-role="page" id="create_user">
     <div data-role="header">
       <h1>Create a New User</h1>
@@ -86,12 +85,21 @@
     <div data-role="footer"></div>
   </div>
 
+  <script>
+      function display_user(data) {
+        $('#user').children('[data-role="content"]').html(
+            data['first_name'] + '<br>' + data['last_name'] + '<br>' + data['email_address'] + '<br>' + data['key']);
+        $.mobile.changePage('#user');
+      }
+    </script>
   <div data-role="page" id="user">
     <div data-role="header">
       <h1>User</h1>
     </div>
     <div data-role="content"></div>
-    <div data-role="footer"></div>
+    <div data-role="footer">
+      <button>All Users</button>
+    </div>
   </div>
 
 </body>
