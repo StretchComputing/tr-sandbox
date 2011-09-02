@@ -14,11 +14,8 @@ public class SandboxApplication extends Application {
      */
     @Override
     public Restlet createInboundRoot() {
-        // Create a router Restlet that routes each call to a new instance of
-        // SandboxRestlet.
         Router router = new Router(getContext());
 
-        // Defines only one route.
         router.attach("/sandbox", SandboxResource.class);
         router.attach("/users", UsersResource.class);
         router.attach("/users/{key}", UsersResource.class);

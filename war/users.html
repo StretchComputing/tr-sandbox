@@ -11,9 +11,18 @@
 <script>
   $('#all_users').live('pagecreate', function() {
     $.getJSON('/users', function(data) {
-      $('#all_users').children('[data-role="content"]').html(data['message']);
+      display_users(data);
     });
   });
+  
+  function display_users(data) {
+    var content_div = $('#all_users').children('[data-role="content"]');
+    for (i = 0; i < data['users'].length; i++) {
+      var u = data['users'][i];
+      var display = u['first_name'] + ' ' + u['last_name'] + ', ' + u['email_address'];
+      $('<div/>').html($('<a/>').attr('href', '#user/' + u['user_id']).html(display)).appendTo(content_div);
+    }
+  }
 
   $('#create_user').live('pagecreate', function() {
     $('#new_user_form').submit(submit_new_user);
@@ -35,7 +44,8 @@
   }
 
   function display_user(data) {
-    $('#user').children('[data-role="content"]').html(data['first_name']);
+    $('#user').children('[data-role="content"]').html(
+        data['first_name'] + '<br>' + data['last_name'] + '<br>' + data['email_address'] + '<br>' + data['key']);
     $.mobile.changePage('#user');
   }
 </script>
