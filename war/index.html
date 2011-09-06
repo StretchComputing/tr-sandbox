@@ -10,9 +10,9 @@
     $('<div/>').html("Here's some new information we inserted with JavaScript").appendTo('body');
     $('<img/>').attr('src', 'https://stretchsite.appspot.com/images/Logo_NavBar.jpg').appendTo('body');
     $.ajax({
-      url: '/sandbox',
-      type: 'PUT',
-      success: function(data) {
+      url : '/sandbox',
+      type : 'PUT',
+      success : function(data) {
         $('<p/>').html("The following data courtesy of an Ajax PUT action:<br>" + data).appendTo('body');
       }
     })
@@ -23,6 +23,8 @@
 <body>
   <h1>TR's Sandbox</h1>
   <a href="sandbox">
-    <p>Our only servlet right now is: sandbox.</p> </a>
+    <p>We have a servlet called: sandbox.</p> </a>
+  <a href="users.html">
+    <p>And a mobile CRUD example called: users.</p> </a>
 </body>
 </html>
