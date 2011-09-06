@@ -16,9 +16,11 @@ import org.restlet.representation.Representation;
 import org.restlet.representation.Variant;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
+import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
+import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.stretchcom.sandbox.models.User;
 
@@ -33,7 +35,7 @@ public class UsersResource extends ServerResource {
 
     @Get("json")
     public JsonRepresentation get(Variant variant) {
-        log.info("in getUsers");
+        log.info("in get");
         if (id != null) {
             return show(id);
         } else {
@@ -43,31 +45,67 @@ public class UsersResource extends ServerResource {
 
     @Post("json")
     public JsonRepresentation post(Representation entity) {
-        log.info("in createUser");
-        JSONObject out = new JSONObject();
+        log.info("in post");
+        return new JsonRepresentation(save_user(entity));
+    }
+
+    @Put("json")
+    public JsonRepresentation put(Representation entity) {
+        log.info("in put");
+        return new JsonRepresentation(save_user(entity));
+    }
+
+    private JsonRepresentation index() {
+        log.info("in index");
+        JSONObject json = new JSONObject();
         EntityManager em = EMF.get().createEntityManager();
-        this.setStatus(Status.SUCCESS_CREATED);
+        try {
+            List<User> users = new ArrayList<User>();
+            JSONArray ja = new JSONArray();
+            users = (List<User>) em.createNamedQuery("User.getAll").getResultList();
+            for (User user : users) {
+                ja.put(get_json(user));
+            }
+            json.put("users", ja);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            this.setStatus(Status.SERVER_ERROR_INTERNAL);
+        }
+        return new JsonRepresentation(json);
+    }
+
+    private JsonRepresentation show(String id) {
+        log.info("in show");
+        EntityManager em = EMF.get().createEntityManager();
+        Key key = KeyFactory.stringToKey(id);
+        User user = (User) em.createNamedQuery("User.getByKey").setParameter("key", key).getSingleResult();
+
+        return new JsonRepresentation(get_json(user));
+    }
+
+    private JSONObject save_user(Representation entity) {
+        EntityManager em = EMF.get().createEntityManager();
 
         User user = null;
         em.getTransaction().begin();
         try {
             user = new User();
-            JSONObject in = new JsonRepresentation(entity).getJsonObject();
-            if (in.has("first_name")) {
-                user.setFirstName(in.getString("first_name"));
+            JSONObject json = new JsonRepresentation(entity).getJsonObject();
+            if (id != null) {
+                Key key = KeyFactory.stringToKey(id);
+                user = (User) em.createNamedQuery("User.getByKey").setParameter("key", key).getSingleResult();
             }
-            if (in.has("last_name")) {
-                user.setLastName(in.getString("last_name"));
+            if (json.has("first_name")) {
+                user.setFirstName(json.getString("first_name"));
             }
-            if (in.has("email_address")) {
-                user.setEmailAddress(in.getString("email_address"));
+            if (json.has("last_name")) {
+                user.setLastName(json.getString("last_name"));
+            }
+            if (json.has("email_address")) {
+                user.setEmailAddress(json.getString("email_address"));
             }
             em.persist(user);
             em.getTransaction().commit();
-            out.put("first_name", user.getFirstName());
-            out.put("last_name", user.getLastName());
-            out.put("email_address", user.getEmailAddress());
-            out.put("key", KeyFactory.keyToString(user.getKey()));
         } catch (IOException e) {
             log.severe("error extracting JSON object from Post");
             e.printStackTrace();
@@ -81,42 +119,21 @@ public class UsersResource extends ServerResource {
             }
             em.close();
         }
-        return new JsonRepresentation(out);
+        return get_json(user);
     }
 
-    private JsonRepresentation index() {
-        log.info("in getAllUsers");
-        JSONObject out = new JSONObject();
-        EntityManager em = EMF.get().createEntityManager();
+    private JSONObject get_json(User user) {
+        JSONObject json = new JSONObject();
+
         try {
-            List<User> users = new ArrayList<User>();
-            JSONArray ja = new JSONArray();
-            users = (List<User>) em.createNamedQuery("User.getAll").getResultList();
-            for (User u : users) {
-                JSONObject jo = new JSONObject();
-                jo.put("user_id", KeyFactory.keyToString(u.getKey()));
-                jo.put("first_name", u.getFirstName());
-                jo.put("last_name", u.getLastName());
-                jo.put("email_address", u.getEmailAddress());
-                ja.put(jo);
-            }
-            out.put("users", ja);
+            json.put("user_id", KeyFactory.keyToString(user.getKey()));
+            json.put("first_name", user.getFirstName());
+            json.put("last_name", user.getLastName());
+            json.put("email_address", user.getEmailAddress());
         } catch (JSONException e) {
             e.printStackTrace();
             this.setStatus(Status.SERVER_ERROR_INTERNAL);
         }
-        return new JsonRepresentation(out);
-    }
-
-    private JsonRepresentation show(String id) {
-        log.info("in getUser");
-        JSONObject out = new JSONObject();
-        try {
-            out.put("message", "from the show method");
-        } catch (JSONException e) {
-            e.printStackTrace();
-            this.setStatus(Status.SERVER_ERROR_INTERNAL);
-        }
-        return new JsonRepresentation(out);
+        return json;
     }
 }

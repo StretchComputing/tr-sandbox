@@ -11,7 +11,8 @@ import com.google.appengine.api.datastore.Key;
 
 @Entity
 @NamedQueries({ @NamedQuery(name = "User.getAll", query = "SELECT u FROM User u"),
-    @NamedQuery(name = "User.getByEmailAddress", query = "SELECT u FROM User u WHERE u.emailAddress = :emailAddress") })
+    @NamedQuery(name = "User.getByEmailAddress", query = "SELECT u FROM User u WHERE u.emailAddress = :emailAddress"),
+    @NamedQuery(name = "User.getByKey", query = "SELECT u FROM User u WHERE u.key = :key") })
 public class User {
     private String firstName;
     private String lastName;

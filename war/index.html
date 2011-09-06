@@ -1,30 +1,175 @@
 <!DOCTYPE html>
-
 <html>
 <head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<title>TR's Sandbox</title>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+<meta charset="UTF-8">
+<title>All Users</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0b2/jquery.mobile-1.0b2.min.css" />
+<script src="http://code.jquery.com/jquery-1.6.2.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.0b2/jquery.mobile-1.0b2.min.js"></script>
+<script src="/js/script.js"></script>
 <script>
-  $(function() {
-    $('<div/>').html("Here's some new information we inserted with JavaScript").appendTo('body');
-    $('<img/>').attr('src', 'https://stretchsite.appspot.com/images/Logo_NavBar.jpg').appendTo('body');
-    $.ajax({
-      url : '/sandbox',
-      type : 'PUT',
-      success : function(data) {
-        $('<p/>').html("The following data courtesy of an Ajax PUT action:<br>" + data).appendTo('body');
-      }
-    })
-  });
+  function clear_form() {
+    $('#form').find('form')[0].reset();
+    $('#user_id').val('');
+  }
+  
+  function populate_form(data) {
+    $('#user_id').val(data['user_id']);
+    $('#first_name').val(data['first_name']);
+    $('#last_name').val(data['last_name']);
+    $('#email_address').val(data['email_address']);
+  }
 </script>
 </head>
 
 <body>
-  <h1>TR's Sandbox</h1>
-  <a href="sandbox">
-    <p>We have a servlet called: sandbox.</p> </a>
-  <a href="users.html">
-    <p>And a mobile CRUD example called: users.</p> </a>
+
+  <!-- Index -->
+  <script>
+      function index(data) {
+        var ul = $('#index').find('[data-role="listview"]');
+        ul.html('');
+        for (i = 0; i < data['users'].length; i++) {
+          var u = data['users'][i];
+          var display = u['first_name'] + ' ' + u['last_name'] + ', ' + u['email_address'];
+          var a = $('<a href="#form"/>').html(display);
+          a.jqmData('id', u['user_id']);
+          ul.append($('<li/>').html(a));
+        }
+        ul.listview('refresh');
+        ul.find('a').click(function() {
+          edit_user($(this).jqmData('id'));
+        });
+      }
+
+      $('#index').live('pageshow', function() {
+        $.mobile.showPageLoadingMsg();
+        $.getJSON('/users', function(data) {
+          index(data);
+          $.mobile.hidePageLoadingMsg();
+        });
+        $('#create_user_button').click(function() {
+          clear_form();
+        })
+      });
+    </script>
+
+  <div data-role="page" id="index">
+    <div data-role="header">
+      <h1>All Users</h1>
+    </div>
+    <div data-role="content">
+      <ul data-role="listview">
+      </ul>
+    </div>
+    <div data-role="footer">
+      <div data-role="navbar">
+        <ul>
+          <li><a href="#form" id="create_user_button">Create a New User</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- End Index -->
+
+
+  <!-- User Form -->
+  <script>
+      function save() {
+        var method, url;
+        if ($('#user_id').val().length > 0) {
+          method = 'PUT';
+          url = '/users/' + $('#user_id').val();
+        } else {
+          method = 'POST';
+          url = '/users';
+        }
+        var json = JSON.stringify($(this).serializeJSON());
+        $.ajax({
+          type : method,
+          url : url,
+          contentType : 'application/json',
+          data : json,
+          success : function(data) {
+            display_user(data);
+          },
+          dataType : 'json'
+        });
+        return false;
+      }
+
+      function edit_user(id) {
+        clear_form();
+        $.mobile.showPageLoadingMsg();
+        $.getJSON('/users/' + id, function(data) {
+          populate_form(data);
+          $.mobile.hidePageLoadingMsg();
+        });
+      }
+
+      $('#form').live('pagecreate', function() {
+        $(this).find('form').submit(save);
+      });
+    </script>
+
+  <div data-role="page" id="form">
+    <div data-role="header">
+      <h1>Create a New User</h1>
+    </div>
+    <div data-role="content">
+      <form>
+        <input type="hidden" name="user_id" id="user_id" value="">
+        <div data-role="fieldcontain">
+          <label for="first_name">First Name:</label> <input type="text" name="first_name" id="first_name">
+        </div>
+        <div data-role="fieldcontain">
+          <label for="last_name">Last Name:</label> <input type="text" name="last_name" id="last_name">
+        </div>
+        <div data-role="fieldcontain">
+          <label for="email_address">Email Address:</label> <input type="email" name="email_address" id="email_address"
+            placeholder="Please enter a valid email address and check it carefully." required>
+        </div>
+        <input type="submit" value="Save">
+      </form>
+    </div>
+    <div data-role="footer">
+      <div data-role="navbar">
+        <ul>
+          <li><a href="#index">Cancel</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- End User Form -->
+
+
+  <!-- Show -->
+  <script>
+      function display_user(data) {
+        $('#show').children('[data-role="content"]')
+            .html(
+                data['first_name'] + '<br>' + data['last_name'] + '<br>' + data['email_address'] + '<br>'
+                    + data['user_id']);
+        $.mobile.changePage('#show');
+      }
+    </script>
+
+  <div data-role="page" id="show">
+    <div data-role="header">
+      <h1>User</h1>
+    </div>
+    <div data-role="content"></div>
+    <div data-role="footer">
+      <div data-role="navbar">
+        <ul>
+          <li><a href="#index">All Users</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- End Show -->
+
 </body>
 </html>
