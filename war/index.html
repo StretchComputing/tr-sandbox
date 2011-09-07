@@ -10,10 +10,11 @@
 <script src="/js/script.js"></script>
 <script>
   function clear_form() {
+    console.log('clear form');
     $('#form').find('form')[0].reset();
     $('#user_id').val('');
   }
-  
+
   function populate_form(data) {
     $('#user_id').val(data['user_id']);
     $('#first_name').val(data['first_name']);
@@ -49,9 +50,12 @@
           index(data);
           $.mobile.hidePageLoadingMsg();
         });
+      });
+
+      $('#index').live('pagecreate', function() {
         $('#create_user_button').click(function() {
           clear_form();
-        })
+        });
       });
     </script>
 
@@ -66,8 +70,7 @@
     <div data-role="footer">
       <div data-role="navbar">
         <ul>
-          <li><a href="#form" id="create_user_button">Create a New User</a>
-          </li>
+          <li><a href="#form" id="create_user_button">Create a New User</a></li>
         </ul>
       </div>
     </div>
@@ -132,12 +135,16 @@
             placeholder="Please enter a valid email address and check it carefully." required>
         </div>
         <input type="submit" value="Save">
+        <p>
+          <a href="#delete" data-role="button">Delete</a>
+        </p>
       </form>
     </div>
     <div data-role="footer">
       <div data-role="navbar">
         <ul>
-          <li><a href="#index">Cancel</a></li>
+          <li><a href="#index">Cancel</a>
+          </li>
         </ul>
       </div>
     </div>
@@ -164,12 +171,52 @@
     <div data-role="footer">
       <div data-role="navbar">
         <ul>
-          <li><a href="#index">All Users</a></li>
+          <li><a href="#index">All Users</a>
+          </li>
         </ul>
       </div>
     </div>
   </div>
   <!-- End Show -->
+
+
+  <!-- Delete Confirmation -->
+  <script>
+  $('#delete').live('pagecreate', function() {
+    $('#delete_item').click(function() {
+      $.ajax({
+        type : 'DELETE',
+        url : '/users/' + $('#user_id').val(),
+        contentType : 'application/json',
+        success : function(data) {
+          console.log('deleting something here');
+          $('#delete').dialog('close');
+          $.mobile.changePage('#index');
+        },
+        dataType : 'json'
+      });
+    });
+  });
+  </script>
+  
+  <div data-role="dialog" id="delete">
+    <div data-role="header">
+      <h1>Delete</h1>
+    </div>
+    <div data-role="content">
+      <div style="text-align: center;">
+        <h1>Delete Item</h1>
+        <p>Are you sure?</p>
+      </div>
+      <p>
+        <a id="delete_item" data-role="button">Delete</a>
+      </p>
+      <p>
+        <a href="" data-role="button" data-rel="back">Cancel</a>
+      </p>
+    </div>
+  </div>
+  <!-- End Delete Confirmation -->
 
 </body>
 </html>

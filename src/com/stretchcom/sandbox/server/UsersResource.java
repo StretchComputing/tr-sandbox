@@ -14,6 +14,7 @@ import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.representation.Variant;
+import org.restlet.resource.Delete;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
@@ -55,6 +56,24 @@ public class UsersResource extends ServerResource {
         return new JsonRepresentation(save_user(entity));
     }
 
+    @Delete("json")
+    public JsonRepresentation delete() {
+        log.info("in delete");
+        EntityManager em = EMF.get().createEntityManager();
+        try {
+            Key key = KeyFactory.stringToKey(id);
+            em.getTransaction().begin();
+            User user = (User) em.createNamedQuery("User.getByKey").setParameter("key", key).getSingleResult();
+            em.remove(user);
+            em.getTransaction().commit();
+        } finally {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            em.close();
+        }
+        return null;
+    }
     private JsonRepresentation index() {
         log.info("in index");
         JSONObject json = new JSONObject();
