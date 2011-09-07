@@ -189,8 +189,6 @@
         url : '/users/' + $('#user_id').val(),
         contentType : 'application/json',
         success : function(data) {
-          console.log('deleting something here');
-          $('#delete').dialog('close');
           $.mobile.changePage('#index');
         },
         dataType : 'json'
