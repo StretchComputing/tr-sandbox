@@ -16,4 +16,12 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 		<servlet-name>Sandbox</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
+	<servlet>
+	  <servlet-name>Detect</servlet-name>
+	  <servlet-class>com.stretchcom.sandbox.server.SandboxServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+	  <servlet-name>Detect</servlet-name>
+	  <url-pattern>/detect</url-pattern>
+	</servlet-mapping>
 </web-app>
