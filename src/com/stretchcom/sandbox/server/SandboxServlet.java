@@ -3,12 +3,24 @@ package com.stretchcom.sandbox.server;
 import java.io.IOException;
 import javax.servlet.http.*;
 
+import com.handinteractive.mobile.UAgentInfo;
+
 @SuppressWarnings("serial")
 public class SandboxServlet extends HttpServlet {
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("text/plain");
-        resp.getWriter().println(isMobile(req) ? "mobile" : "not mobile");
-        resp.getWriter().println(req.getHeader("user-agent"));
+        UAgentInfo agent_info = new UAgentInfo(req.getHeader("user-agent"), req.getHeader("accept"));
+        if (agent_info.detectTierIphone() || agent_info.detectTierTablet()) {
+            resp.getWriter().println("Mobile Device");
+        } else {
+            resp.getWriter().println("Desktop Device");
+        }
+//        resp.getWriter().println(isMobile(req) ? "mobile" : "not mobile");
+        resp.getWriter().println();
+        resp.getWriter().println("User Agent: " + req.getHeader("user-agent"));
+        resp.getWriter().println();
+        resp.getWriter().println("Present HTTP Headers");
+        resp.getWriter().println("--------------------");
         for (Object o : java.util.Collections.list(req.getHeaderNames())) {
             resp.getWriter().println(o);
         }
