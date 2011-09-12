@@ -31,6 +31,7 @@ public class UsersResource extends ServerResource {
 
     @Override
     protected void doInit() throws ResourceException {
+        log.info("in doInit");
         id = (String) getRequest().getAttributes().get("id");
     }
 

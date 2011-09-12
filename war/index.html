@@ -46,7 +46,7 @@
 
       $('#index').live('pageshow', function() {
         $.mobile.showPageLoadingMsg();
-        $.getJSON('/users', function(data) {
+        $.getJSON('/rest/users', function(data) {
           index(data);
           $.mobile.hidePageLoadingMsg();
         });
@@ -84,10 +84,10 @@
         var method, url;
         if ($('#user_id').val().length > 0) {
           method = 'PUT';
-          url = '/users/' + $('#user_id').val();
+          url = '/rest/users/' + $('#user_id').val();
         } else {
           method = 'POST';
-          url = '/users';
+          url = '/rest/users';
         }
         var json = JSON.stringify($(this).serializeJSON());
         $.ajax({
@@ -106,7 +106,7 @@
       function edit_user(id) {
         clear_form();
         $.mobile.showPageLoadingMsg();
-        $.getJSON('/users/' + id, function(data) {
+        $.getJSON('/rest/users/' + id, function(data) {
           populate_form(data);
           $.mobile.hidePageLoadingMsg();
         });
@@ -182,21 +182,21 @@
 
   <!-- Delete Confirmation -->
   <script>
-  $('#delete').live('pagecreate', function() {
-    $('#delete_item').click(function() {
-      $.ajax({
-        type : 'DELETE',
-        url : '/users/' + $('#user_id').val(),
-        contentType : 'application/json',
-        success : function(data) {
-          $.mobile.changePage('#index');
-        },
-        dataType : 'json'
+      $('#delete').live('pagecreate', function() {
+        $('#delete_item').click(function() {
+          $.ajax({
+            type : 'DELETE',
+            url : '/rest/users/' + $('#user_id').val(),
+            contentType : 'application/json',
+            success : function(data) {
+              $.mobile.changePage('#index');
+            },
+            dataType : 'json'
+          });
+        });
       });
-    });
-  });
-  </script>
-  
+    </script>
+
   <div data-role="dialog" id="delete">
     <div data-role="header">
       <h1>Delete</h1>
