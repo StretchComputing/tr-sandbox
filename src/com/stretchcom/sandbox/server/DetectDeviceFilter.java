@@ -33,20 +33,20 @@ public class DetectDeviceFilter implements Filter {
             String uri = httpRequest.getRequestURI();
             log.info("Before URI: " + uri);
 
-            UAgentInfo agent_info = new UAgentInfo(httpRequest.getHeader("user-agent"), httpRequest.getHeader("accept"));
-            if (agent_info.detectTierIphone() || agent_info.detectTierTablet()) {
-                log.info("Mobile Device");
-                uri = MOBILE_DIR + uri;
-            } else {
-                log.info("Desktop Device");
-                uri = DESKTOP_DIR + uri;
+            if (!uri.startsWith(MOBILE_DIR) && !uri.startsWith(DESKTOP_DIR)) {
+                UAgentInfo agent_info = new UAgentInfo(httpRequest.getHeader("user-agent"), httpRequest.getHeader("accept"));
+                if (agent_info.detectTierIphone() || agent_info.detectTierTablet()) {
+                    uri = MOBILE_DIR + uri;
+                } else {
+                    uri = DESKTOP_DIR + uri;
+                }
+                log.info("After URI: " + uri);
+                RequestDispatcher rd = httpRequest.getRequestDispatcher(uri);
+                rd.forward(request, response);
+                return;
             }
-            log.info("After URI: " + uri);
-            RequestDispatcher rd = httpRequest.getRequestDispatcher(uri);
-            rd.forward(request, response);
-        } else {
-            chain.doFilter(request, response);
         }
+        chain.doFilter(request, response);
     }
 
     @Override
