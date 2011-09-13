@@ -15,6 +15,7 @@ public class SandboxApplication extends Application {
     @Override
     public Restlet createInboundRoot() {
         Router router = new Router(getContext());
+        log.info("in createInboundRoot");
 
         router.attach("/sandbox", SandboxResource.class);
         router.attach("/users", UsersResource.class);
