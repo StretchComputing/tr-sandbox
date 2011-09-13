@@ -19,6 +19,8 @@ public class SandboxApplication extends Application {
         router.attach("/sandbox", SandboxResource.class);
         router.attach("/users", UsersResource.class);
         router.attach("/users/{id}", UsersResource.class);
+        router.attach("/crashDetects", CrashDetectResource.class);
+        router.attach("/crashDetects/{id}", CrashDetectResource.class);
 
         return router;
     }
