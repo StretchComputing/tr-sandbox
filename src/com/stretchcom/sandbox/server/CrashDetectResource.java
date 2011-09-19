@@ -1,6 +1,7 @@
 package com.stretchcom.sandbox.server;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
@@ -43,7 +44,23 @@ public class CrashDetectResource extends ServerResource {
 			if(json.has("summary")) {
 				crashDetect.setSummary(json.getString("summary"));
 			}
-		    
+			
+			if(json.has("userName")) {
+				crashDetect.setUserName(json.getString("userName"));
+			}
+			
+			if(json.has("stackData")) {
+				crashDetect.setStackDataBase64(json.getString("stackData"));
+			}
+			
+			if(json.has("detectedDate")) {
+				String detectedDateStr = json.getString("detectedDate");
+				Date gmtDetectedDate = GMT.stringToDate(detectedDateStr, null);
+				if(gmtDetectedDate == null) {
+					log.info("invalid detected date format passed in");
+				}
+				crashDetect.setDetectedDate(gmtDetectedDate);
+			}
 			em.persist(crashDetect);
 			em.getTransaction().commit();
 			

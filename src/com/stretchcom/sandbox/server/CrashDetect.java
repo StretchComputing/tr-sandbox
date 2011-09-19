@@ -1,5 +1,7 @@
 package com.stretchcom.sandbox.server;
 
+import java.util.Date;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -8,6 +10,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
 import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.Text;
 
 @Entity
 @NamedQueries({
@@ -18,6 +21,10 @@ import com.google.appengine.api.datastore.Key;
 })
 public class CrashDetect {
 	private String summary;
+	// TODO support time zone and GMT for dates
+	private Date detectedDate;
+	private String userName;
+	private Text stackDataBase64;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,4 +42,27 @@ public class CrashDetect {
 		this.summary = summary;
 	}
 
+	public Date getDetectedDate() {
+		return detectedDate;
+	}
+
+	public void setDetectedDate(Date detectedDate) {
+		this.detectedDate = detectedDate;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public Text getStackDataBase64() {
+		return stackDataBase64;
+	}
+
+	public void setStackDataBase64(String stackDataBase64) {
+		this.stackDataBase64 = new Text(stackDataBase64);
+	}
 }
