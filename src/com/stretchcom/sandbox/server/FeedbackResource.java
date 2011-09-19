@@ -1,6 +1,7 @@
 package com.stretchcom.sandbox.server;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
@@ -46,6 +47,23 @@ public class FeedbackResource extends ServerResource {
 				log.info("stored voice value = " + feedback.getVoiceBase64());
 			} else {
 				log.info("no JSON voice field found");
+			}
+			
+			if(json.has("userName")) {
+				feedback.setUserName(json.getString("userName"));
+			}
+			
+			if(json.has("recordedDate")) {
+				String recordedDateStr = json.getString("recordedDate");
+				Date gmtRecordedDate = GMT.stringToDate(recordedDateStr, null);
+				if(gmtRecordedDate == null) {
+					log.info("invalid reocrded date format passed in");
+				}
+				feedback.setRecordedDate(gmtRecordedDate);
+			}
+			
+			if(json.has("instanceUrl")) {
+				feedback.setInstanceUrl(json.getString("instanceUrl"));
 			}
 		    
 			em.persist(feedback);

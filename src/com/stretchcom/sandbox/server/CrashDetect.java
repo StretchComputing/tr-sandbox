@@ -25,6 +25,7 @@ public class CrashDetect {
 	private Date detectedDate;
 	private String userName;
 	private Text stackDataBase64;
+	private String instanceUrl;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,5 +65,13 @@ public class CrashDetect {
 
 	public void setStackDataBase64(String stackDataBase64) {
 		this.stackDataBase64 = new Text(stackDataBase64);
+	}
+
+	public String getInstanceUrl() {
+		return instanceUrl;
+	}
+
+	public void setInstanceUrl(String instanceUrl) {
+		this.instanceUrl = instanceUrl;
 	}
 }

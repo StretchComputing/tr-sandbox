@@ -61,6 +61,11 @@ public class CrashDetectResource extends ServerResource {
 				}
 				crashDetect.setDetectedDate(gmtDetectedDate);
 			}
+			
+			if(json.has("instanceUrl")) {
+				crashDetect.setInstanceUrl(json.getString("instanceUrl"));
+			}
+
 			em.persist(crashDetect);
 			em.getTransaction().commit();
 			

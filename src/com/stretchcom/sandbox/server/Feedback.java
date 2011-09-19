@@ -1,5 +1,7 @@
 package com.stretchcom.sandbox.server;
 
+import java.util.Date;
+
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -20,6 +22,9 @@ import com.google.appengine.api.datastore.Text;
 })
 public class Feedback {
 	@Basic private Text voiceBase64;
+	private Date recordedDate;
+	private String userName;
+	private String instanceUrl;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,5 +40,29 @@ public class Feedback {
 
 	public void setVoiceBase64(String voiceBase64) {
 		this.voiceBase64 = new Text(voiceBase64);
+	}
+	
+	public Date getRecordedDate() {
+		return recordedDate;
+	}
+
+	public void setRecordedDate(Date recordedDate) {
+		this.recordedDate = recordedDate;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public String getInstanceUrl() {
+		return instanceUrl;
+	}
+
+	public void setInstanceUrl(String instanceUrl) {
+		this.instanceUrl = instanceUrl;
 	}
 }
