@@ -18,11 +18,13 @@ import org.restlet.representation.Representation;
 import org.restlet.representation.Variant;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
+import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.stretchcom.sandbox.models.User;
 import com.stretchcom.sandbox.server.EMF;
 
 public class FeedbackResource extends ServerResource {
@@ -39,7 +41,7 @@ public class FeedbackResource extends ServerResource {
     public JsonRepresentation get(Variant variant) {
          JSONObject jsonReturn;
 
-        log.info("in get");
+        log.info("in get for Feedback resource");
         if (feedbackId != null) {
             // Get Feedback Info API
         	log.info("in Get Feedback Info API");
@@ -51,6 +53,12 @@ public class FeedbackResource extends ServerResource {
         }
         
         return new JsonRepresentation(jsonReturn);
+    }
+    
+    @Put("json")
+    public JsonRepresentation put(Representation entity) {
+        log.info("in put for Feedback resource");
+        return new JsonRepresentation(updateFeedback(entity));
     }
 
     // Handles 'Create a new feedback' API
@@ -160,13 +168,14 @@ public class FeedbackResource extends ServerResource {
         	jsonReturn.put("status", status);
         	
         	jsonReturn.put("voice", feedback.getVoiceBase64());
-            	
+            log.info("JSON return object built successfully");	
 		} catch (JSONException e) {
 			log.severe("error converting json representation into a JSON object");
 			this.setStatus(Status.SERVER_ERROR_INTERNAL);
 			e.printStackTrace();
 		} catch (NoResultException e) {
 			// feedback ID passed in is not valid
+			log.info("Feedback ID not found");
 			apiStatus = ApiStatusCode.FEEDBACK_NOT_FOUND;
 		} catch (NonUniqueResultException e) {
 			log.severe("should never happen - two or more games have same key");
@@ -235,5 +244,54 @@ public class FeedbackResource extends ServerResource {
 
 		return jsonReturn;
     }
-    
+
+
+    private JSONObject updateFeedback(Representation entity) {
+        EntityManager em = EMF.get().createEntityManager();
+    	JSONObject jsonReturn = new JSONObject();
+    	
+		String apiStatus = ApiStatusCode.SUCCESS;
+		this.setStatus(Status.SUCCESS_OK);
+
+		Feedback feedback = null;
+        em.getTransaction().begin();
+        try {
+            feedback = new Feedback();
+            JSONObject json = new JsonRepresentation(entity).getJsonObject();
+            if (this.feedbackId != null) {
+                Key key = KeyFactory.stringToKey(this.feedbackId);
+                feedback = (Feedback)em.createNamedQuery("Feedback.getByKey")
+                	.setParameter("key", key)
+                	.getSingleResult();
+            }
+            if (json.has("status")) {
+                feedback.setStatus(json.getString("status"));
+            }
+            em.persist(feedback);
+            em.getTransaction().commit();
+        } catch (IOException e) {
+            log.severe("error extracting JSON object from Post");
+            e.printStackTrace();
+            this.setStatus(Status.SERVER_ERROR_INTERNAL);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            this.setStatus(Status.SERVER_ERROR_INTERNAL);
+        } finally {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            em.close();
+        }
+    	
+		try {
+			jsonReturn.put("apiStatus", apiStatus);
+		} catch (JSONException e) {
+			log.severe("error converting json representation into a JSON object");
+			this.setStatus(Status.SERVER_ERROR_INTERNAL);
+			e.printStackTrace();
+		}
+
+		return jsonReturn;
+    }
+
 }
