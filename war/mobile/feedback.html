@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>All Users</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://code.jquery.com/mobile/latest/jquery.mobile.min.css" />
+<!-- 
+<script src="/mobile/js/libs/modernizr-2.0.6.min.js"></script>
+-->
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script src="http://code.jquery.com/mobile/latest/jquery.mobile.min.js"></script>
+</head>
+
+<body>
+
+  <!-- Index -->
+  <script>
+      function index(data) {
+        var ul = $('#index').find('[data-role="listview"]');
+        ul.html('');
+        for (i = 0; i < data['feedback'].length; i++) {
+          var f = data['feedback'][i];
+          var display = f['userName'] + ', ' + f['recordedDate'] + ', ' + f['instanceUrl'] + ', ' + f['status'];
+          var a = $('<a href="#show"/>').html(display);
+          a.jqmData('feedbackId', f['feedbackId']);
+          ul.append($('<li/>').html(a));
+        }
+        ul.listview('refresh');
+        ul.find('a').click(function() {
+          show_feedback($(this).jqmData('feedbackId'));
+        });
+      }
+
+      $('#index').live('pageshow', function() {
+        $.mobile.showPageLoadingMsg();
+        $.getJSON('/rest/feedback', function(data) {
+          index(data);
+          $.mobile.hidePageLoadingMsg();
+        });
+      });
+    </script>
+
+  <div data-role="page" id="index">
+    <div data-role="header">
+      <h1>All Feedback</h1>
+    </div>
+    <div data-role="content">
+      <ul data-role="listview">
+      </ul>
+    </div>
+    <div data-role="footer">
+      <div data-role="navbar">
+        <ul>
+          <li>(put link here to view archives)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- End Index -->
+
+
+  <!-- Show -->
+  <script>
+      function show_details(data) {
+        var html = 'API Status: ' + data['apiStatus'];
+        html += '<br>';
+        html += 'Feedback ID:' + data['feedbackId'];
+        html += '<br>';
+        html += 'Recorded Date:' + data['recordedDate'];
+        html += '<br>';
+        html += 'User Name:' + data['userName'];
+        html += '<br>';
+        html += 'Instance URL:' + data['instanceUrl'];
+        html += '<br>';
+        html += 'Voice:' + $('<audio controls/>').html($('<source/>').attr('src', 'data:audio/x-acc;base64,' + data['voice']));
+        html += '<br>';
+        html += 'status:' + data['status'];
+        $('#show').children('[data-role="content"]')
+            .html(html);
+      }
+      function show_feedback(id) {
+        $.mobile.showPageLoadingMsg();
+        $.getJSON('/rest/feedback/' + id, function(data) {
+          show_details(data);
+          $.mobile.hidePageLoadingMsg();
+        });
+      }
+    </script>
+
+  <div data-role="page" id="show">
+    <div data-role="header">
+      <h1>Feedback</h1>
+    </div>
+    <div data-role="content"></div>
+    <div data-role="footer">
+      <div data-role="navbar">
+        <ul>
+          <li><a href="#index">All Feedback</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- End Show -->
+</body>
+</html>
