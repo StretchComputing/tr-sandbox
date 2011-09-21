@@ -19,6 +19,10 @@ import com.google.appengine.api.datastore.Text;
     		name="Feedback.getAll",
     		query="SELECT fb FROM Feedback fb"
     ),
+    @NamedQuery(
+    		name="Feedback.getByKey",
+    		query="SELECT fb FROM Feedback fb WHERE fb.key = :key"
+    ),
 })
 public class Feedback {
 	public final static String NEW_STATUS = "new";
