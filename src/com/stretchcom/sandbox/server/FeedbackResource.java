@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -134,7 +136,52 @@ public class FeedbackResource extends ServerResource {
        	EntityManager em = EMF.get().createEntityManager();
     	JSONObject jsonReturn = new JSONObject();
     	
-    	return jsonReturn;
+		String apiStatus = ApiStatusCode.SUCCESS;
+		this.setStatus(Status.SUCCESS_OK);
+		try {
+			Key feedbackKey = KeyFactory.stringToKey(this.feedbackId);
+    		Feedback feedback = null;
+    		feedback = (Feedback)em.createNamedQuery("Feedback.getByKey")
+				.setParameter("key", feedbackKey)
+				.getSingleResult();
+
+    		jsonReturn.put("feedbackId", KeyFactory.keyToString(feedback.getKey()));
+			
+        	Date recordedDate = feedback.getRecordedDate();
+        	// TODO support time zones
+        	if(recordedDate != null) jsonReturn.put("recordedDate", GMT.convertToLocalDate(recordedDate, null));
+        	
+        	jsonReturn.put("userName", feedback.getUserName());
+        	jsonReturn.put("instanceUrl", feedback.getInstanceUrl());
+        	
+        	// TODO remove eventually, for backward compatibility before status field existed. If status not set, default to 'new'
+        	String status = feedback.getStatus();
+        	if(status == null || status.length() == 0) {status = "new";}
+        	jsonReturn.put("status", status);
+        	
+        	jsonReturn.put("voice", feedback.getVoiceBase64());
+            	
+		} catch (JSONException e) {
+			log.severe("error converting json representation into a JSON object");
+			this.setStatus(Status.SERVER_ERROR_INTERNAL);
+			e.printStackTrace();
+		} catch (NoResultException e) {
+			// feedback ID passed in is not valid
+			apiStatus = ApiStatusCode.FEEDBACK_NOT_FOUND;
+		} catch (NonUniqueResultException e) {
+			log.severe("should never happen - two or more games have same key");
+			this.setStatus(Status.SERVER_ERROR_INTERNAL);
+		} 
+    	
+		try {
+			jsonReturn.put("apiStatus", apiStatus);
+		} catch (JSONException e) {
+			log.severe("error converting json representation into a JSON object");
+			this.setStatus(Status.SERVER_ERROR_INTERNAL);
+			e.printStackTrace();
+		}
+
+		return jsonReturn;
     }
     
     private JSONObject getListOfFeedbacksJson() {
