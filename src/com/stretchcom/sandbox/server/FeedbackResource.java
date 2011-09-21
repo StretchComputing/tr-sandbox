@@ -168,13 +168,14 @@ public class FeedbackResource extends ServerResource {
         	jsonReturn.put("status", status);
         	
         	jsonReturn.put("voice", feedback.getVoiceBase64());
-            	
+            log.info("JSON return object built successfully");	
 		} catch (JSONException e) {
 			log.severe("error converting json representation into a JSON object");
 			this.setStatus(Status.SERVER_ERROR_INTERNAL);
 			e.printStackTrace();
 		} catch (NoResultException e) {
 			// feedback ID passed in is not valid
+			log.info("Feedback ID not found");
 			apiStatus = ApiStatusCode.FEEDBACK_NOT_FOUND;
 		} catch (NonUniqueResultException e) {
 			log.severe("should never happen - two or more games have same key");
