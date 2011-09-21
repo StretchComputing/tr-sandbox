@@ -21,10 +21,14 @@ import com.google.appengine.api.datastore.Text;
     ),
 })
 public class Feedback {
+	public final static String NEW_STATUS = "new";
+	public final static String ARCHIVED_STATUS = "archived";
+	
 	@Basic private Text voiceBase64;
 	private Date recordedDate;
 	private String userName;
 	private String instanceUrl;
+	private String status;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,5 +68,13 @@ public class Feedback {
 
 	public void setInstanceUrl(String instanceUrl) {
 		this.instanceUrl = instanceUrl;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 }

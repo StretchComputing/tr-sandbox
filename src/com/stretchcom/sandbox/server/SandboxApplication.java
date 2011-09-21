@@ -22,8 +22,13 @@ public class SandboxApplication extends Application {
         router.attach("/users/{id}", UsersResource.class);
         router.attach("/crashDetects", CrashDetectResource.class);
         router.attach("/crashDetects/{id}", CrashDetectResource.class);
+        
+        // TODO remove "feedbacks" mappings. There for backward compatibility during Beta testing.
         router.attach("/feedbacks", FeedbackResource.class);
         router.attach("/feedbacks/{id}", FeedbackResource.class);
+        
+        router.attach("/feedback", FeedbackResource.class);
+        router.attach("/feedback/{id}", FeedbackResource.class);
 
         return router;
     }
