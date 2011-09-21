@@ -73,11 +73,11 @@
         html += '<br>';
         html += 'Instance URL:' + data['instanceUrl'];
         html += '<br>';
-        html += 'Voice:' + $('<audio controls/>').html($('<source/>').attr('src', 'data:audio/x-acc;base64,' + data['voice']));
-        html += '<br>';
         html += 'status:' + data['status'];
+        html += '<br>';
+        html += 'Voice:';
         $('#show').children('[data-role="content"]')
-            .html(html);
+            .html(html).append($('<audio controls/>').html($('<source/>').attr('src', 'data:audio/x-acc;base64,' + data['voice'])));
       }
       function show_feedback(id) {
         $.mobile.showPageLoadingMsg();
