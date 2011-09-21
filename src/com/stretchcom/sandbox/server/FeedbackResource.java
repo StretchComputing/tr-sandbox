@@ -264,8 +264,13 @@ public class FeedbackResource extends ServerResource {
                 	.setParameter("key", key)
                 	.getSingleResult();
             }
-            if (json.has("status")) {
-                feedback.setStatus(json.getString("status"));
+            if(json.has("status")) {
+            	String status = json.getString("status");
+            	if(feedback.isStatusValid(status)) {
+                    feedback.setStatus(status);
+            	} else {
+            		apiStatus = ApiStatusCode.INVALID_STATUS;
+            	}
             }
             em.persist(feedback);
             em.getTransaction().commit();
