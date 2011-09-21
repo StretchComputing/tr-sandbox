@@ -77,7 +77,7 @@
         html += '<br>';
         html += 'Voice:';
         $('#show').children('[data-role="content"]')
-            .html(html).append($('<audio controls/>').html($('<source/>').attr('src', 'data:audio/x-acc;base64,' + data['voice'])));
+            .html(html).append($('<audio controls/>').html($('<source/>').attr('src', 'data:audio/mp4;base64,' + data['voice'])));
       }
       function show_feedback(id) {
         $.mobile.showPageLoadingMsg();
