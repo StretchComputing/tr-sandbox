@@ -10,6 +10,11 @@
 -->
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
 <script src="http://code.jquery.com/mobile/latest/jquery.mobile.min.js"></script>
+<script>
+  function getSingleQueryParameter() {
+    return $.mobile.path.parseUrl($.mobile.activePage.data('url'))['search'].replace(/^.*\=/, '');
+  }
+</script>
 </head>
 
 <body>
@@ -22,14 +27,10 @@
         for (i = 0; i < data['feedback'].length; i++) {
           var f = data['feedback'][i];
           var display = f['userName'] + ', ' + f['recordedDate'] + ', ' + f['instanceUrl'] + ', ' + f['status'];
-          var a = $('<a href="#show"/>').html(display);
-          a.jqmData('feedbackId', f['feedbackId']);
+          var a = $('<a href="#show?feedbackId=' + f['feedbackId'] + '"/>').html(display);
           ul.append($('<li/>').html(a));
         }
         ul.listview('refresh');
-        ul.find('a').click(function() {
-          show_feedback($(this).jqmData('feedbackId'));
-        });
       }
 
       $('#index').live('pageshow', function() {
@@ -76,8 +77,8 @@
         html += 'status:' + data['status'];
         html += '<br>';
         html += 'Voice:';
-        $('#show').children('[data-role="content"]')
-            .html(html).append($('<audio controls/>').html($('<source/>').attr('src', 'data:audio/mp4;base64,' + data['voice'])));
+        $('#show').children('[data-role="content"]').html(html).append(
+            $('<audio controls/>').html($('<source/>').attr('src', 'data:audio/mp4;base64,' + data['voice'])));
       }
       function show_feedback(id) {
         $.mobile.showPageLoadingMsg();
@@ -86,6 +87,15 @@
           $.mobile.hidePageLoadingMsg();
         });
       }
+
+      $('#show').live('pageshow', function() {
+        var feedbackId = getSingleQueryParameter();
+        $.mobile.showPageLoadingMsg();
+        $.getJSON('/rest/feedback/' + feedbackId, function(data) {
+          show_details(data);
+          $.mobile.hidePageLoadingMsg();
+        });
+      });
     </script>
 
   <div data-role="page" id="show">
@@ -96,7 +106,8 @@
     <div data-role="footer">
       <div data-role="navbar">
         <ul>
-          <li><a href="#index">All Feedback</a></li>
+          <li><a href="#index">All Feedback</a>
+          </li>
         </ul>
       </div>
     </div>
