@@ -81,4 +81,9 @@ public class Feedback {
 	public void setStatus(String status) {
 		this.status = status;
 	}
+	
+	public Boolean isStatusValid(String theStatus) {
+		if(theStatus.equals(Feedback.NEW_STATUS) || theStatus.equals(Feedback.ARCHIVED_STATUS)) return true;
+		return false;
+	}
 }
