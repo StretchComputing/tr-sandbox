@@ -147,6 +147,12 @@ public class FeedbackResource extends ServerResource {
 		String apiStatus = ApiStatusCode.SUCCESS;
 		this.setStatus(Status.SUCCESS_OK);
 		try {
+			if (this.feedbackId == null || this.feedbackId.length() == 0) {
+				apiStatus = ApiStatusCode.FEEDBACK_ID_REQUIRED;
+				jsonReturn.put("apiStatus", apiStatus);
+				return jsonReturn;
+			}
+			
 			Key feedbackKey = KeyFactory.stringToKey(this.feedbackId);
     		Feedback feedback = null;
     		feedback = (Feedback)em.createNamedQuery("Feedback.getByKey")
@@ -178,7 +184,7 @@ public class FeedbackResource extends ServerResource {
 			log.info("Feedback ID not found");
 			apiStatus = ApiStatusCode.FEEDBACK_NOT_FOUND;
 		} catch (NonUniqueResultException e) {
-			log.severe("should never happen - two or more games have same key");
+			log.severe("should never happen - two or more feedback have same key");
 			this.setStatus(Status.SERVER_ERROR_INTERNAL);
 		} 
     	
@@ -256,6 +262,12 @@ public class FeedbackResource extends ServerResource {
 		Feedback feedback = null;
         em.getTransaction().begin();
         try {
+			if (this.feedbackId == null || this.feedbackId.length() == 0) {
+				apiStatus = ApiStatusCode.FEEDBACK_ID_REQUIRED;
+				jsonReturn.put("apiStatus", apiStatus);
+				return jsonReturn;
+			}
+			
             feedback = new Feedback();
             JSONObject json = new JsonRepresentation(entity).getJsonObject();
             if (this.feedbackId != null) {
@@ -281,7 +293,14 @@ public class FeedbackResource extends ServerResource {
         } catch (JSONException e) {
             e.printStackTrace();
             this.setStatus(Status.SERVER_ERROR_INTERNAL);
-        } finally {
+        } catch (NoResultException e) {
+			// feedback ID passed in is not valid
+			log.info("Feedback ID not found");
+			apiStatus = ApiStatusCode.FEEDBACK_NOT_FOUND;
+		} catch (NonUniqueResultException e) {
+			log.severe("should never happen - two or more feedback have same key");
+			this.setStatus(Status.SERVER_ERROR_INTERNAL);
+		} finally {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
