@@ -36,6 +36,14 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 	  <servlet-name>Detect</servlet-name>
 	  <url-pattern>/detect</url-pattern>
 	</servlet-mapping>
+	<servlet>
+	  <servlet-name>Audio</servlet-name>
+	  <servlet-class>com.stretchcom.sandbox.server.AudioServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+	  <servlet-name>Audio</servlet-name>
+	  <url-pattern>/audio/*</url-pattern>
+	</servlet-mapping>
 	<welcome-file-list>
 	  <welcome-file>index.html</welcome-file>
 	</welcome-file-list>
