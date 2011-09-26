@@ -8,6 +8,7 @@ import org.restlet.routing.Router;
 
 public class SandboxApplication extends Application {
     private static final Logger log = Logger.getLogger(SandboxApplication.class.getName());
+    public static final String APPLICATION_BASE_URL = "https://mobile.pulse.tr-sandbox.appspot.com/";
 
     /**
      * Creates a root Restlet that will receive all incoming calls.
@@ -20,13 +21,13 @@ public class SandboxApplication extends Application {
         router.attach("/sandbox", SandboxResource.class);
         router.attach("/users", UsersResource.class);
         router.attach("/users/{id}", UsersResource.class);
+        
         router.attach("/crashDetects", CrashDetectResource.class);
         router.attach("/crashDetects/{id}", CrashDetectResource.class);
         
         // TODO remove "feedbacks" mappings. There for backward compatibility during Beta testing.
         router.attach("/feedbacks", FeedbackResource.class);
         router.attach("/feedbacks/{id}", FeedbackResource.class);
-        
         router.attach("/feedback", FeedbackResource.class);
         router.attach("/feedback/{id}", FeedbackResource.class);
 

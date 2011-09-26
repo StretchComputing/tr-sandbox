@@ -18,14 +18,22 @@ import com.google.appengine.api.datastore.Text;
     		name="CrashDetect.getAll",
     		query="SELECT cd FROM CrashDetect cd"
     ),
+    @NamedQuery(
+    		name="CrashDetect.getByKey",
+    		query="SELECT cd FROM CrashDetect cd WHERE cd.key = :key"
+    ),
 })
 public class CrashDetect {
+	public final static String NEW_STATUS = "new";
+	public final static String ARCHIVED_STATUS = "archived";
+
 	private String summary;
 	// TODO support time zone and GMT for dates
 	private Date detectedDate;
 	private String userName;
 	private Text stackDataBase64;
 	private String instanceUrl;
+	private String status;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -59,8 +67,8 @@ public class CrashDetect {
 		this.userName = userName;
 	}
 
-	public Text getStackDataBase64() {
-		return stackDataBase64;
+	public String getStackDataBase64() {
+		return this.stackDataBase64 == null? null : this.stackDataBase64.getValue();
 	}
 
 	public void setStackDataBase64(String stackDataBase64) {
@@ -74,4 +82,18 @@ public class CrashDetect {
 	public void setInstanceUrl(String instanceUrl) {
 		this.instanceUrl = instanceUrl;
 	}
+	
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+	
+	public Boolean isStatusValid(String theStatus) {
+		if(theStatus.equals(CrashDetect.NEW_STATUS) || theStatus.equals(CrashDetect.ARCHIVED_STATUS)) return true;
+		return false;
+	}
+	
 }
