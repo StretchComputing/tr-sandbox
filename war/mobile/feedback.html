@@ -59,7 +59,10 @@
     html += 'status:' + feedback['status'];
     html += '<br>';
     html += 'Voice:';
-    html += $('<div>').append($('<audio controls/>').html($('<source/>').attr('src', 'data:audio/mp4;base64,' + feedback['voice']))).html();
+    html += '<audio controls>';
+    html += '  <source src="/audio/' + feedback['feedbackId'] + '.mp4" type="audio/mp4">';
+    html += '</audio>';
+//     html += $('<div>').append($('<audio controls/>').html($('<source/>').attr('src', 'data:audio/mp4;base64,' + feedback['voice']))).html();
     return html;
   }
 

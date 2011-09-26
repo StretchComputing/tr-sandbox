@@ -31,6 +31,7 @@ import com.google.appengine.repackaged.com.google.common.util.Base64DecoderExcep
 public class AudioServlet extends HttpServlet {
 	private static final Logger log = Logger.getLogger(AudioServlet.class.getName());
 	private static int MAX_TASK_RETRY_COUNT = 3;
+	private static final String AUDIO_EXT = ".mp4";
 
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		log.info("AudioServlet.doPost() entered - SHOULD NOT BE CALLED!!!!!!!!!!!!!!!!!");
@@ -74,8 +75,9 @@ public class AudioServlet extends HttpServlet {
 		String pathInfo = theReq.getPathInfo();
 		log.info("get Audio URL pathInfo = " + pathInfo);
 		if(pathInfo == null || pathInfo.length() == 0) {return null;}
-		if(pathInfo.startsWith("/")) {
-			pathInfo = pathInfo.substring(1);
+		if(pathInfo.startsWith("/") && pathInfo.endsWith(AUDIO_EXT)) {
+		    int extIndex = pathInfo.indexOf(AUDIO_EXT);
+			pathInfo = pathInfo.substring(1, extIndex);
 		}
 		return pathInfo;
 	}
