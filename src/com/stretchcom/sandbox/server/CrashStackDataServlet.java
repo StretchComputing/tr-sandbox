@@ -2,6 +2,9 @@ package com.stretchcom.sandbox.server;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -41,6 +44,14 @@ public class CrashStackDataServlet extends HttpServlet {
 		log.info("CrashStackDataServlet.doGet() entered");
 		ServletOutputStream out = null;
 		resp.setContentType("application/octet-stream");
+		
+		// create a file name based on today's date
+		Format formatter = new SimpleDateFormat("MM_dd_yy");
+		Date todayDate = new Date();
+		String todayDateFormatted = formatter.format(todayDate);
+		String fileName = todayDateFormatted + FILE_EXT;
+		log.info("crash data file name = " + fileName);
+		resp.addHeader("Content-Disposition", "attachment; filename=" + fileName);
 
 		try {
 			String crashDetectId = this.getCrashDetectId(req);
