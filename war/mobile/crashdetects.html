@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>All Users</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://code.jquery.com/mobile/latest/jquery.mobile.min.css" />
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script src="http://code.jquery.com/mobile/latest/jquery.mobile.min.js"></script>
+<script>
+  function showList(data) {
+    var ul = $('#index').find('[data-role="listview"]');
+    ul.html('');
+    for (i = 0; i < data['crashDetects'].length; i++) {
+      var cd = data['crashDetects'][i];
+      var display = cd['userName'] + ', ' + cd['detectedDate'] + ', ' + cd['instanceUrl'] + ', ' + cd['status'];
+      var a = $('<a href="#show_item?crashDetectId=' + cd['crashDetectId'] + '"/>').html(display);
+      ul.append($('<li/>').html(a));
+    }
+    ul.listview('refresh');
+  }
+
+  $('#index').live('pageshow', function() {
+    $.mobile.showPageLoadingMsg();
+    $.getJSON('/rest/crashDetects', function(data) {
+      showList(data);
+      $.mobile.hidePageLoadingMsg();
+    });
+  });
+
+  function showItem(url, options) {
+    $.mobile.showPageLoadingMsg();
+    var crashDetectId = url.hash.replace(/.*crashDetectId=/, '');
+    var pageSelector = url.hash.replace(/\?.*$/, "");
+
+    $.getJSON('/rest/crashDetects/' + crashDetectId, function(data) {
+      var $page = $(pageSelector);
+      var $header = $page.children(':jqmData(role=header)');
+      var $content = $page.children(':jqmData(role=content)');
+      $content.html(get_details(data));
+      options.dataUrl = url.href;
+      $.mobile.changePage($page, options);
+      $.mobile.hidePageLoadingMsg();
+    });
+  }
+
+  function get_details(item) {
+    var html = 'API Status: ' + item['apiStatus'];
+    html += '<br>';
+    html += 'Crash Detect ID: ' + item['crashDetectId'];
+    html += '<br>';
+    html += 'Detected Date: ' + item['detectedDate'];
+    html += '<br>';
+    html += 'User Name: ' + item['userName'];
+    html += '<br>';
+    html += 'Instance URL: ' + item['instanceUrl'];
+    html += '<br>';
+    html += 'status: ' + item['status'];
+    html += '<br>';
+    html += 'Stack Data: ';
+    html += '<a href="/crashStackData/' + item['crashDetectId'] + '.plcrash" data-ajax="false">plcrash file</a>';
+    return html;
+  }
+
+  $(document).bind('pagebeforechange', function(event, data) {
+    // We only want to handle changepage calls where the caller is asking us to load a page by URL.
+    if (typeof data.toPage === "string") {
+      // We are being asked to load a page by URL, but we only want to handle URLs that request the data for a
+      // specific feedback.
+      var url = $.mobile.path.parseUrl(data.toPage);
+      var re = /^#show_item/;
+      if (url.hash.search(re) !== -1) {
+        // We're being asked to display the items for a specific feedback. Call our internal method that
+        // builds the content for the feedback on the fly.
+        showItem(url, data.options);
+
+        // Make sure to tell changepage we've handled this call so it doesn't have to do anything.
+        event.preventDefault();
+      }
+    }
+  });
+</script>
+</head>
+
+<body>
+  <!-- Index -->
+  <div data-role="page" id="index">
+    <div data-role="header">
+      <h1>All Crash Detects</h1>
+    </div>
+    <div data-role="content">
+      <ul data-role="listview">
+      </ul>
+    </div>
+    <div data-role="footer">
+      <div data-role="navbar">
+        <ul>
+          <li>(put link here to view archives)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- End Index -->
+
+
+  <!-- Show -->
+  <script>
+      
+    </script>
+
+  <div id="show_item" data-role="page">
+    <div data-role="header">
+      <h1>Crash Detect</h1>
+    </div>
+    <div data-role="content"></div>
+    <div data-role="footer">
+      <div data-role="navbar">
+        <ul>
+          <li><a href="#index">Back To All Crash Detects</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- End Show -->
+</body>
+</html>
