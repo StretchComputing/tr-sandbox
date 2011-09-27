@@ -48,21 +48,25 @@
   function get_details(feedback) {
     var html = 'API Status: ' + feedback['apiStatus'];
     html += '<br>';
-    html += 'Feedback ID:' + feedback['feedbackId'];
+    html += 'Feedback ID: ' + feedback['feedbackId'];
     html += '<br>';
-    html += 'Recorded Date:' + feedback['recordedDate'];
+    html += 'Recorded Date: ' + feedback['recordedDate'];
     html += '<br>';
-    html += 'User Name:' + feedback['userName'];
+    html += 'User Name: ' + feedback['userName'];
     html += '<br>';
-    html += 'Instance URL:' + feedback['instanceUrl'];
+    html += 'Instance URL: ' + feedback['instanceUrl'];
     html += '<br>';
-    html += 'status:' + feedback['status'];
+    html += 'status: ' + feedback['status'];
     html += '<br>';
-    html += 'Voice:';
+    html += 'Voice: ';
     html += '<audio controls>';
-    html += '  <source src="/audio/' + feedback['feedbackId'] + '.mp4" type="audio/mp4">';
+    html += '  <source src="/audio/' + feedback['feedbackId'] + '.mp4" type="audio/mp4">'
     html += '</audio>';
-//     html += $('<div>').append($('<audio controls/>').html($('<source/>').attr('src', 'data:audio/mp4;base64,' + feedback['voice']))).html();
+    html += '<br>';
+    html += 'Test file: '
+    html += '<audio controls>';
+    html += '  <source src="/mobile/test.mp4" type="audio/mp4">';
+    html += '</audio>';
     return html;
   }
 

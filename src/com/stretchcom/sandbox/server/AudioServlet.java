@@ -1,5 +1,6 @@
 package com.stretchcom.sandbox.server;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Properties;
@@ -40,6 +41,7 @@ public class AudioServlet extends HttpServlet {
 	@Override
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		log.info("AudioServlet.doGet() entered");
+		log.info(req.getScheme());
 		ServletOutputStream out = null;
 		// TODO confirm with Terry the mime type
 		resp.setContentType("audio/mp4");
@@ -58,6 +60,7 @@ public class AudioServlet extends HttpServlet {
 			out = resp.getOutputStream();
 			out.write(voice);
 		} catch (Exception e) {
+		    e.printStackTrace();
 			log.info("Servlet exception = " + e.getMessage());
 			resp.setStatus(HttpServletResponse.SC_OK);
 		} finally {
