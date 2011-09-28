@@ -32,7 +32,7 @@ import com.google.appengine.repackaged.com.google.common.util.Base64DecoderExcep
 public class AudioServlet extends HttpServlet {
 	private static final Logger log = Logger.getLogger(AudioServlet.class.getName());
 	private static int MAX_TASK_RETRY_COUNT = 3;
-	private static final String AUDIO_EXT = ".mp4";
+	private static final String AUDIO_EXT = ".m4a";
 
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		log.info("AudioServlet.doPost() entered - SHOULD NOT BE CALLED!!!!!!!!!!!!!!!!!");
@@ -52,11 +52,13 @@ public class AudioServlet extends HttpServlet {
 				log.info("could not extract feedbackID from URL");
 				return;
 			}
+        		resp.addHeader("Content-Disposition", "inline; filename=" + feedbackId + AUDIO_EXT);
 
 			byte[] voice = getFeedbackAudio(feedbackId);
 			if (voice == null)
 				return;
 
+        		resp.setContentLength(voice.length);
 			out = resp.getOutputStream();
 			out.write(voice);
 		} catch (Exception e) {
