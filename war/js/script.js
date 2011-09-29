@@ -1,3 +1,28 @@
+// jQuery mobile method for dynamically injecting pages.
+// JQM doc page located at ~/docs/pages/page-dynamic.html.
+$(document).bind('pagebeforechange', function(event, data) {
+  // Only handle changepage calls whens loading a page URL.
+  if (typeof data.toPage === "string") {
+    // Only hanlde requests for the item page.
+    var url = $.mobile.path.parseUrl(data.toPage);
+    var re = /^#item/;
+    if (url.hash.search(re) !== -1) {
+      showItem(url, data.options);
+      event.preventDefault();
+    }
+  }
+});// Listen for when the index/list page is shown to display a new list.
+
+$('#index').live('pageshow', function() {
+  $.mobile.showPageLoadingMsg();
+  $.getJSON('/rest/' + itemName(), function(data) {
+    showList(data);
+    $.mobile.hidePageLoadingMsg();
+  });
+});
+
+// Generic function to show the list of items.
+// Calls listItem which needs to be defined per type of item.
 function showList(data) {
   var content = $('#index').children(':jqmData(role=content)');
   var markup = '<ul data-role="listview">';
@@ -9,14 +34,8 @@ function showList(data) {
   content.find(':jqmData(role=listview)').listview();
 }
 
-$('#index').live('pageshow', function() {
-  $.mobile.showPageLoadingMsg();
-  $.getJSON('/rest/' + itemName(), function(data) {
-    showList(data);
-    $.mobile.hidePageLoadingMsg();
-  });
-});
-
+// Generic function to show the item page.
+// Calls itemDetails which needs to be defined per type of item.
 function showItem(url, options) {
   $.mobile.showPageLoadingMsg();
   var id = url.hash.replace(/.*id=/, '');
@@ -32,23 +51,3 @@ function showItem(url, options) {
     $.mobile.hidePageLoadingMsg();
   });
 }
-
-$(document).bind('pagebeforechange', function(event, data) {
-  // We only want to handle changepage calls where the caller is asking us to
-  // load a page by URL.
-  if (typeof data.toPage === "string") {
-    // We are being asked to load a page by URL, but we only want to handle URLs
-    // that request the data for a specific item.
-    var url = $.mobile.path.parseUrl(data.toPage);
-    var re = /^#item/;
-    if (url.hash.search(re) !== -1) {
-      // We're being asked to display the items for a specific item. Call our
-      // internal method that builds the content for the item on the fly.
-      showItem(url, data.options);
-
-      // Make sure to tell changepage we've handled this call so it doesn't have
-      // to do anything.
-      event.preventDefault();
-    }
-  }
-});
