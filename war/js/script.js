@@ -24,12 +24,15 @@ $('#index').live('pageshow', function() {
 // Generic function to show the list of items.
 // Calls listItem which needs to be defined per type of item.
 function showList(data) {
-  var content = $('#index').children(':jqmData(role=content)');
+  var page = $('#index');
+  var header = page.children(':jqmData(role=header)');
+  var content = page.children(':jqmData(role=content)');
   var markup = '<ul data-role="listview">';
   for (i = 0; i < data[itemName()].length; i++) {
     var item = data[itemName()][i];
     markup += listItem(item);
   }
+  header.find('h1').html(listTitle());
   content.html(markup);
   content.find(':jqmData(role=listview)').listview();
 }
@@ -42,12 +45,13 @@ function showItem(url, options) {
   var pageSelector = url.hash.replace(/\?.*$/, "");
 
   $.getJSON('/rest/' + itemName() + '/' + id, function(data) {
-    var $page = $(pageSelector);
-    var $header = $page.children(':jqmData(role=header)');
-    var $content = $page.children(':jqmData(role=content)');
-    $content.html(itemDetails(data));
+    var page = $(pageSelector);
+    var header = page.children(':jqmData(role=header)');
+    var content = page.children(':jqmData(role=content)');
+    header.find('h1').html(itemTitle());
+    content.html(itemDetails(data));
     options.dataUrl = url.href;
-    $.mobile.changePage($page, options);
+    $.mobile.changePage(page, options);
     $.mobile.hidePageLoadingMsg();
   });
 }

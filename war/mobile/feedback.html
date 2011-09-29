@@ -9,13 +9,21 @@
 <script src="http://code.jquery.com/mobile/latest/jquery.mobile.min.js"></script>
 <script src="/js/script.js"></script>
 <script>
-  function itemName() {
-    return 'feedback';
+  function listTitle() {
+    return 'New Feedback';
   }
 
   function listItem(item) {
     var display = item['recordedDate'] + ' - ' + item['userName'] + ' - ' + item['instanceUrl'];
     return '<li><a href="#item?id=' + item['feedbackId'] + '">' + display + '</a></li>';
+  }
+
+  function itemTitle() {
+    return 'Feedback';
+  }
+
+  function itemName() {
+    return 'feedback';
   }
 
   function itemDetails(item) {
@@ -37,30 +45,19 @@
 <body>
   <div data-role="page" id="index">
     <div data-role="header">
-      <h1>New Feedback</h1>
+      <h1></h1>
+      <a href="#archives" class="ui-btn-right" data-theme="b">Archives</a>
     </div>
     <div data-role="content"></div>
-    <div data-role="footer">
-      <div data-role="navbar">
-        <ul>
-          <li>(put link here to view archives)</li>
-        </ul>
-      </div>
-    </div>
   </div>
 
   <div id="item" data-role="page">
     <div data-role="header">
-      <h1>Feedback</h1>
+      <a href="#" data-rel="back">Back</a>
+      <h1></h1>
+      <a href="#" data-theme="b">Archive</a>
     </div>
     <div data-role="content"></div>
-    <div data-role="footer">
-      <div data-role="navbar">
-        <ul>
-          <li><a href="#index">Back To All Feedback</a></li>
-        </ul>
-      </div>
-    </div>
   </div>
 </body>
 </html>
