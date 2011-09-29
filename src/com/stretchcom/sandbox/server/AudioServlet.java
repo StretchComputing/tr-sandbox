@@ -68,7 +68,7 @@ public class AudioServlet extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             log.info("Servlet exception = " + e.getMessage());
-            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } finally {
             if (out != null) {
                 out.flush();
