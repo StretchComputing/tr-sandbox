@@ -2,104 +2,44 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>All Users</title>
+<title>Livefeed</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="http://code.jquery.com/mobile/latest/jquery.mobile.min.css" />
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
 <script src="http://code.jquery.com/mobile/latest/jquery.mobile.min.js"></script>
+<script src="/js/script.js"></script>
 <script>
-  function showFeedbackList(data) {
-    var ul = $('#index').find('[data-role="listview"]');
-    ul.html('');
-    for (i = 0; i < data['feedback'].length; i++) {
-      var feedback = data['feedback'][i];
-      var display = feedback['userName'] + ', ' + feedback['recordedDate'] + ', ' + feedback['instanceUrl'] + ', '
-          + feedback['status'];
-      var a = $('<a href="#show_feedback?feedbackId=' + feedback['feedbackId'] + '"/>').html(display);
-      ul.append($('<li/>').html(a));
-    }
-    ul.listview('refresh');
+  function itemName() {
+    return 'feedback';
   }
 
-  $('#index').live('pageshow', function() {
-    $.mobile.showPageLoadingMsg();
-    $.getJSON('/rest/feedback', function(data) {
-      showFeedbackList(data);
-      $.mobile.hidePageLoadingMsg();
-    });
-  });
-
-  function showFeedback(url, options) {
-    $.mobile.showPageLoadingMsg();
-    var feedbackId = url.hash.replace(/.*feedbackId=/, '');
-    var pageSelector = url.hash.replace(/\?.*$/, "");
-
-    $.getJSON('/rest/feedback/' + feedbackId, function(data) {
-      var $page = $(pageSelector);
-      var $header = $page.children(':jqmData(role=header)');
-      var $content = $page.children(':jqmData(role=content)');
-      $content.html(get_details(data));
-      options.dataUrl = url.href;
-      $.mobile.changePage($page, options);
-      $.mobile.hidePageLoadingMsg();
-    });
+  function listItem(item) {
+    var display = item['recordedDate'] + ' - ' + item['userName'] + ' - ' + item['instanceUrl'];
+    return '<li><a href="#item?id=' + item['feedbackId'] + '">' + display + '</a></li>';
   }
 
-  function get_details(feedback) {
-    var html = 'API Status: ' + feedback['apiStatus'];
-    html += '<br>';
-    html += 'Feedback ID: ' + feedback['feedbackId'];
-    html += '<br>';
-    html += 'Recorded Date: ' + feedback['recordedDate'];
-    html += '<br>';
-    html += 'User Name: ' + feedback['userName'];
-    html += '<br>';
-    html += 'Instance URL: ' + feedback['instanceUrl'];
-    html += '<br>';
-    html += 'status: ' + feedback['status'];
-    html += '<br>';
-    html += 'Voice: ';
-    html += '<audio controls>';
-    html += '  <source src="/audio/' + feedback['feedbackId'] + '.mp4" type="audio/mp4">'
-    html += '</audio>';
-    html += '<br>';
-    html += 'Test file: '
-    html += '<audio controls>';
-    html += '  <source src="/mobile/test.mp4" type="audio/mp4">';
-    html += '</audio>';
+  function itemDetails(item) {
+    var html = '<div>Recorded: ' + item['recordedDate'] + '</div>';
+    html += '<div>By: ' + item['userName'] + '</div>';
+    html += '<div>For: ' + item['instanceUrl'] + '</div>';
+    html += '<div>Status: ' + item['status'] + '</div>';
+    html += '<div>';
+    html += '  Feedback: ';
+    html += '  <audio controls>';
+    html += '    <source src="/audio/' + item['feedbackId'] + '.mp4" type="audio/mp4">'
+    html += '  </audio>';
+    html += '</div>';
     return html;
   }
-
-  $(document).bind('pagebeforechange', function(event, data) {
-    // We only want to handle changepage calls where the caller is asking us to load a page by URL.
-    if (typeof data.toPage === "string") {
-      // We are being asked to load a page by URL, but we only want to handle URLs that request the data for a
-      // specific feedback.
-      var url = $.mobile.path.parseUrl(data.toPage);
-      var re = /^#show_feedback/;
-      if (url.hash.search(re) !== -1) {
-        // We're being asked to display the items for a specific feedback. Call our internal method that
-        // builds the content for the feedback on the fly.
-        showFeedback(url, data.options);
-
-        // Make sure to tell changepage we've handled this call so it doesn't have to do anything.
-        event.preventDefault();
-      }
-    }
-  });
 </script>
 </head>
 
 <body>
-  <!-- Index -->
   <div data-role="page" id="index">
     <div data-role="header">
-      <h1>All Feedback</h1>
+      <h1>New Feedback</h1>
     </div>
-    <div data-role="content">
-      <ul data-role="listview">
-      </ul>
-    </div>
+    <div data-role="content"></div>
     <div data-role="footer">
       <div data-role="navbar">
         <ul>
@@ -108,28 +48,19 @@
       </div>
     </div>
   </div>
-  <!-- End Index -->
 
-
-  <!-- Show -->
-  <script>
-      
-    </script>
-
-  <div id="show_feedback" data-role="page">
+  <div id="item" data-role="page">
     <div data-role="header">
-      <h1></h1>
+      <h1>Feedback</h1>
     </div>
     <div data-role="content"></div>
     <div data-role="footer">
       <div data-role="navbar">
         <ul>
-          <li><a href="#index">Back To All Feedback</a>
-          </li>
+          <li><a href="#index">Back To All Feedback</a></li>
         </ul>
       </div>
     </div>
   </div>
-  <!-- End Show -->
 </body>
 </html>
