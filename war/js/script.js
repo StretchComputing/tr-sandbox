@@ -1,24 +1,27 @@
-// jQuery mobile method for dynamically injecting pages.
-// JQM doc page located at ~/docs/pages/page-dynamic.html.
-$(document).bind('pagebeforechange', function(event, data) {
-  // Only handle changepage calls whens loading a page URL.
-  if (typeof data.toPage === "string") {
-    // Only hanlde requests for the item page.
-    var url = $.mobile.path.parseUrl(data.toPage);
-    var re = /^#item/;
-    if (url.hash.search(re) !== -1) {
-      showItem(url, data.options);
-      event.preventDefault();
-    }
-  }
-});// Listen for when the index/list page is shown to display a new list.
-
+// Show the list of items
+//
+// Listen for when the index/list page is shown to display a new list.
 $('#index').live('pageshow', function() {
   $.mobile.showPageLoadingMsg();
   $.getJSON('/rest/' + itemName(), function(data) {
     showList(data);
     $.mobile.hidePageLoadingMsg();
   });
+});
+
+// Dynamically inject pages
+//
+// JQM doc page located at <jqm site>/<version>/docs/pages/page-dynamic.html.
+$(document).bind('pagebeforechange', function(event, data) {
+  // Only handle changepage calls whens loading a page URL.
+  if (typeof data.toPage === "string") {
+    // Only hanlde requests for the item page.
+    var url = $.mobile.path.parseUrl(data.toPage);
+    if (url.hash.search(/^#item/) !== -1) {
+      showItem(url, data.options);
+      event.preventDefault();
+    }
+  }
 });
 
 // Generic function to show the list of items.
@@ -42,14 +45,24 @@ function showList(data) {
 function showItem(url, options) {
   $.mobile.showPageLoadingMsg();
   var id = url.hash.replace(/.*id=/, '');
-  var pageSelector = url.hash.replace(/\?.*$/, "");
+  var pageSelector = url.hash.replace(/\?.*$/, '');
 
   $.getJSON('/rest/' + itemName() + '/' + id, function(data) {
     var page = $(pageSelector);
     var header = page.children(':jqmData(role=header)');
     var content = page.children(':jqmData(role=content)');
-    header.find('h1').html(itemTitle());
+    var h1 = header.find('h1');
+    h1.html(itemTitle());
+    var link = '<a href="#item?id=' + id + '"class="ui-btn-right" data-theme="b">';
+    link += data['status'] == 'new' ? 'Archive' : 'Un-archive';
+    link += '</a>';
+    h1.next('a').remove();
+    h1.after(link);
     content.html(itemDetails(data));
+    // Not exactly sure why we need both of these, but they are required to get
+    // the archive link to be styled appropriately.
+    page.page();
+    page.trigger('create');
     options.dataUrl = url.href;
     $.mobile.changePage(page, options);
     $.mobile.hidePageLoadingMsg();
