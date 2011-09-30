@@ -27,18 +27,17 @@ import org.restlet.resource.ServerResource;
 
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
-import com.stretchcom.sandbox.models.User;
-import com.stretchcom.sandbox.server.EMF;
+import com.google.appengine.api.datastore.Text;
 
-public class FeedbackResource extends ServerResource {
-	private static final Logger log = Logger.getLogger(FeedbackResource.class.getName());
-    private String feedbackId;
+public class ClientLogResource extends ServerResource {
+	private static final Logger log = Logger.getLogger(ClientLogResource.class.getName());
+	private String clientLogId;
     private String listStatus;
 
     @Override
     protected void doInit() throws ResourceException {
         log.info("in doInit");
-        feedbackId = (String) getRequest().getAttributes().get("id");
+        clientLogId = (String) getRequest().getAttributes().get("id");
         
 		Form form = getRequest().getResourceRef().getQueryAsForm();
 		for (Parameter parameter : form) {
@@ -46,93 +45,97 @@ public class FeedbackResource extends ServerResource {
 			if(parameter.getName().equals("status"))  {
 				this.listStatus = (String)parameter.getValue().toLowerCase();
 				this.listStatus = Reference.decode(this.listStatus);
-				log.info("FeedbackResource() - decoded status = " + this.listStatus);
+				log.info("ClientLogResource() - decoded status = " + this.listStatus);
 			} 
 		}
     }
 
-    // Handles 'Get Feedback Info API'
-    // Handles 'Get List of Feedback API
     @Get("json")
     public JsonRepresentation get(Variant variant) {
          JSONObject jsonReturn;
 
-        log.info("in get for Feedback resource");
-        if (feedbackId != null) {
-            // Get Feedback Info API
+        log.info("in get for Crash Detect resource");
+        if (this.clientLogId != null) {
+            // Get Client Log Info API
         	log.info("in Get Feedback Info API");
-        	jsonReturn = getFeedbackInfoJson(feedbackId);
+        	jsonReturn = getClientLogInfoJson(this.clientLogId);
         } else {
-            // Get List of Feedback API
+            // Get List of Client Logs API
         	log.info("Get List of Feedbacks API");
-        	jsonReturn = getListOfFeedbacksJson();
+        	jsonReturn = getListOfClientLogsJson();
         }
         
         return new JsonRepresentation(jsonReturn);
     }
     
-    // Handles 'Update Feedback API'
     @Put("json")
     public JsonRepresentation put(Representation entity) {
-        log.info("in put for Feedback resource");
-        return new JsonRepresentation(updateFeedback(entity));
+        log.info("in put for Client Log resource");
+        return new JsonRepresentation(updateClientLog(entity));
     }
 
-    // Handles 'Create a new feedback' API
+    // Handles 'Create a new crash detect' API
     @Post("json")
-    public JsonRepresentation createFeedback(Representation entity) {
-    	log.info("createFeedback(@Post) entered ..... ");
+    public JsonRepresentation createClientLog(Representation entity) {
+    	log.info("createClientLog(@Post) entered ..... ");
         JSONObject jsonReturn = new JSONObject();
 		EntityManager em = EMF.get().createEntityManager();
 		
 		String apiStatus = ApiStatusCode.SUCCESS;
-		Feedback feedback = new Feedback();
+		ClientLog clientLog = new ClientLog();
 		this.setStatus(Status.SUCCESS_CREATED);
 		em.getTransaction().begin();
         try {
 			JsonRepresentation jsonRep = new JsonRepresentation(entity);
 			log.info("jsonRep = " + jsonRep.toString());
 			JSONObject json = jsonRep.getJsonObject();
-			
-			if(json.has("voice")) {
-				feedback.setVoiceBase64(json.getString("voice"));
-				//feedback.setVoiceBase64("this is not voice data");
-				log.info("stored voice value = " + feedback.getVoiceBase64());
+
+			if(json.has("logLevel")) {
+				String logLevel = json.getString("logLevel").toLowerCase();
+				clientLog.setLogLevel(logLevel);
+				if(!clientLog.isLogLevelValid(logLevel)) {
+					apiStatus = ApiStatusCode.INVALID_LOG_LEVEL;
+					jsonReturn.put("apiStatus", apiStatus);
+					return new JsonRepresentation(jsonReturn);
+				}
 			} else {
-				log.info("no JSON voice field found");
+				// default to error
+				clientLog.setLogLevel(ClientLog.ERROR_LOG_LEVEL);
+			}
+			
+			if(json.has("message")) {
+				clientLog.setMessage(json.getString("message"));
+			}
+			
+			if(json.has("stackBackTrace")) {
+				clientLog.setStackBackTrace(json.getString("stackBackTrace"));
 			}
 			
 			if(json.has("userName")) {
-				feedback.setUserName(json.getString("userName"));
-			}
-			
-			if(json.has("recordedDate")) {
-				String recordedDateStr = json.getString("recordedDate");
-				Date gmtRecordedDate = GMT.stringToDate(recordedDateStr, null);
-				if(gmtRecordedDate == null) {
-					log.info("invalid reocrded date format passed in");
-				}
-				feedback.setRecordedDate(gmtRecordedDate);
+				clientLog.setUserName(json.getString("userName"));
 			}
 			
 			if(json.has("instanceUrl")) {
-				feedback.setInstanceUrl(json.getString("instanceUrl"));
+				clientLog.setInstanceUrl(json.getString("instanceUrl"));
 			}
 			
 			// Default status to 'new'
-			feedback.setStatus(Feedback.NEW_STATUS);
-		    
-			em.persist(feedback);
+			clientLog.setStatus(CrashDetect.NEW_STATUS);
+			
+			// Default created date is today
+			clientLog.setCreatedDate(new Date());
+
+			em.persist(clientLog);
 			em.getTransaction().commit();
 			
-			String keyWebStr = KeyFactory.keyToString(feedback.getKey());
-			log.info("feedback with key " + keyWebStr + " created successfully");
+			String keyWebStr = KeyFactory.keyToString(clientLog.getKey());
+			log.info("client log with key " + keyWebStr + " created successfully");
 
 			// TODO URL should be filtered to have only legal characters
 			String baseUri = this.getRequest().getHostRef().getIdentifier();
 			this.getResponse().setLocationRef(baseUri + "/");
 
-			jsonReturn.put("feedbackId", keyWebStr);
+			jsonReturn.put("clientLogId", keyWebStr);
 		} catch (IOException e) {
 			log.severe("error extracting JSON object from Post");
 			e.printStackTrace();
@@ -157,36 +160,38 @@ public class FeedbackResource extends ServerResource {
 		return new JsonRepresentation(jsonReturn);
     }
     
-    private JSONObject getFeedbackInfoJson(String theFeedbackId) {
+    private JSONObject getClientLogInfoJson(String theClientLogId) {
        	EntityManager em = EMF.get().createEntityManager();
     	JSONObject jsonReturn = new JSONObject();
     	
 		String apiStatus = ApiStatusCode.SUCCESS;
 		this.setStatus(Status.SUCCESS_OK);
 		try {
-			if (this.feedbackId == null || this.feedbackId.length() == 0) {
-				apiStatus = ApiStatusCode.FEEDBACK_ID_REQUIRED;
+			if (theClientLogId == null || theClientLogId.length() == 0) {
+				apiStatus = ApiStatusCode.CLIENT_LOG_ID_REQUIRED;
 				jsonReturn.put("apiStatus", apiStatus);
 				return jsonReturn;
 			}
 			
-			Key feedbackKey = KeyFactory.stringToKey(this.feedbackId);
-    		Feedback feedback = null;
-    		feedback = (Feedback)em.createNamedQuery("Feedback.getByKey")
-				.setParameter("key", feedbackKey)
+			Key clientLogKey = KeyFactory.stringToKey(theClientLogId);
+    		ClientLog clientLog = null;
+    		clientLog = (ClientLog)em.createNamedQuery("ClientLog.getByKey")
+				.setParameter("key", clientLogKey)
 				.getSingleResult();
 
-    		jsonReturn.put("feedbackId", KeyFactory.keyToString(feedback.getKey()));
+    		jsonReturn.put("clientLogId", KeyFactory.keyToString(clientLog.getKey()));
 			
-        	Date recordedDate = feedback.getRecordedDate();
+        	Date createdDate = clientLog.getCreatedDate();
         	// TODO support time zones
-        	if(recordedDate != null) jsonReturn.put("recordedDate", GMT.convertToLocalDate(recordedDate, null, "EEE, MMM d, yyyy 'at' HH:mm a"));
-        	
-        	jsonReturn.put("userName", feedback.getUserName());
-        	jsonReturn.put("instanceUrl", feedback.getInstanceUrl());
+        	if(createdDate != null) jsonReturn.put("createdDate", GMT.convertToLocalDate(createdDate, null, "EEE, MMM d, yyyy 'at' HH:mm a"));
+        	jsonReturn.put("userName", clientLog.getUserName());
+        	jsonReturn.put("instanceUrl", clientLog.getInstanceUrl());
+        	jsonReturn.put("logLevel", clientLog.getLogLevel());
+        	jsonReturn.put("message", clientLog.getMessage());
+        	jsonReturn.put("stackBackTrace", clientLog.getStackBackTrace());
         	
         	// TODO remove eventually, for backward compatibility before status field existed. If status not set, default to 'new'
-        	String status = feedback.getStatus();
+        	String status = clientLog.getStatus();
         	if(status == null || status.length() == 0) {status = "new";}
         	jsonReturn.put("status", status);
         	
@@ -194,13 +199,12 @@ public class FeedbackResource extends ServerResource {
 		} catch (JSONException e) {
 			log.severe("error converting json representation into a JSON object");
 			this.setStatus(Status.SERVER_ERROR_INTERNAL);
-			e.printStackTrace();
 		} catch (NoResultException e) {
 			// feedback ID passed in is not valid
-			log.info("Feedback ID not found");
-			apiStatus = ApiStatusCode.FEEDBACK_NOT_FOUND;
+			log.info("Client Log not found");
+			apiStatus = ApiStatusCode.CLIENT_LOG_NOT_FOUND;
 		} catch (NonUniqueResultException e) {
-			log.severe("should never happen - two or more feedback have same key");
+			log.severe("should never happen - two or more client logs have same key");
 			this.setStatus(Status.SERVER_ERROR_INTERNAL);
 		} 
     	
@@ -215,21 +219,21 @@ public class FeedbackResource extends ServerResource {
 		return jsonReturn;
     }
     
-    private JSONObject getListOfFeedbacksJson() {
+    private JSONObject getListOfClientLogsJson() {
        	EntityManager em = EMF.get().createEntityManager();
     	JSONObject jsonReturn = new JSONObject();
     	
 		String apiStatus = ApiStatusCode.SUCCESS;
 		this.setStatus(Status.SUCCESS_OK);
 		try {
-			List<Feedback> feedbacks = null;
+			List<ClientLog> clientLogs = null;
 			if(this.listStatus != null) {
-			    if(this.listStatus.equalsIgnoreCase(Feedback.NEW_STATUS) || this.listStatus.equalsIgnoreCase(Feedback.ARCHIVED_STATUS)){
-					feedbacks= (List<Feedback>)em.createNamedQuery("Feedback.getByStatus")
+			    if(this.listStatus.equalsIgnoreCase(ClientLog.NEW_STATUS) || this.listStatus.equalsIgnoreCase(ClientLog.ARCHIVED_STATUS)){
+			    	clientLogs= (List<ClientLog>)em.createNamedQuery("ClientLog.getByStatus")
 							.setParameter("status", this.listStatus)
 							.getResultList();
-			    } else if(this.listStatus.equalsIgnoreCase(Feedback.ALL_STATUS)) {
-					feedbacks= (List<Feedback>)em.createNamedQuery("Feedback.getAll").getResultList();
+			    } else if(this.listStatus.equalsIgnoreCase(ClientLog.ALL_STATUS)) {
+			    	clientLogs= (List<ClientLog>)em.createNamedQuery("ClientLog.getAll").getResultList();
 			    } else {
 					apiStatus = ApiStatusCode.INVALID_STATUS_PARAMETER;
 					jsonReturn.put("apiStatus", apiStatus);
@@ -237,38 +241,41 @@ public class FeedbackResource extends ServerResource {
 			    }
 			} else {
 				// by default, only get 'new' feedback
-				feedbacks= (List<Feedback>)em.createNamedQuery("Feedback.getByStatus")
-						.setParameter("status", Feedback.NEW_STATUS)
+				clientLogs= (List<ClientLog>)em.createNamedQuery("ClientLog.getByStatus")
+						.setParameter("status", ClientLog.NEW_STATUS)
 						.getResultList();
 			}
 
-			JSONArray feedbackJsonArray = new JSONArray();
-			for (Feedback fb : feedbacks) {
-				JSONObject feedbackJsonObj = new JSONObject();
+			JSONArray clientLogJsonArray = new JSONArray();
+			for (ClientLog cl : clientLogs) {
+				JSONObject clientLogJsonObj = new JSONObject();
 				
-				feedbackJsonObj.put("feedbackId", KeyFactory.keyToString(fb.getKey()));
+				clientLogJsonObj.put("clientLogId", KeyFactory.keyToString(cl.getKey()));
 				
-            	Date recordedDate = fb.getRecordedDate();
+            	Date createdDate = cl.getCreatedDate();
             	// TODO support time zones
-            	if(recordedDate != null) feedbackJsonObj.put("recordedDate", GMT.convertToLocalDate(recordedDate, null, "EEE, MMM d 'at' HH:mm a"));
+            	if(createdDate != null) clientLogJsonObj.put("createdDate", GMT.convertToLocalDate(createdDate, null, "EEE, MMM d 'at' HH:mm a"));
             	
-            	feedbackJsonObj.put("userName", fb.getUserName());
-            	feedbackJsonObj.put("instanceUrl", fb.getInstanceUrl());
+            	clientLogJsonObj.put("userName", cl.getUserName());
+            	clientLogJsonObj.put("instanceUrl", cl.getInstanceUrl());
+            	clientLogJsonObj.put("logLevel", cl.getLogLevel());
+            	clientLogJsonObj.put("message", cl.getMessage());
+            	clientLogJsonObj.put("stackBackTrace", cl.getStackBackTrace());
             	
             	// TODO remove eventually, for backward compatibility before status field existed. If status not set, default to 'new'
-            	String status = fb.getStatus();
+            	String status = cl.getStatus();
             	if(status == null || status.length() == 0) {status = "new";}
-            	feedbackJsonObj.put("status", status);
+            	clientLogJsonObj.put("status", status);
 				
-				feedbackJsonArray.put(feedbackJsonObj);
+            	clientLogJsonArray.put(clientLogJsonObj);
 			}
-			jsonReturn.put("feedback", feedbackJsonArray);
+			jsonReturn.put("clientLogs", clientLogJsonArray);
 		} catch (JSONException e) {
 			log.severe("error converting json representation into a JSON object");
 			this.setStatus(Status.SERVER_ERROR_INTERNAL);
 			e.printStackTrace();
 		} catch (Exception e) {
-			log.severe("getListOfFeedbacksJson(): exception = " + e.getMessage());
+			log.severe("getListOfClientLogsJson(): exception = " + e.getMessage());
 			this.setStatus(Status.SERVER_ERROR_INTERNAL);
 			e.printStackTrace();
 		}
@@ -285,39 +292,39 @@ public class FeedbackResource extends ServerResource {
     }
 
 
-    private JSONObject updateFeedback(Representation entity) {
+    private JSONObject updateClientLog(Representation entity) {
         EntityManager em = EMF.get().createEntityManager();
     	JSONObject jsonReturn = new JSONObject();
     	
 		String apiStatus = ApiStatusCode.SUCCESS;
 		this.setStatus(Status.SUCCESS_OK);
 
-		Feedback feedback = null;
+		ClientLog clientLog = null;
         em.getTransaction().begin();
         try {
-			if (this.feedbackId == null || this.feedbackId.length() == 0) {
-				apiStatus = ApiStatusCode.FEEDBACK_ID_REQUIRED;
+			if (this.clientLogId == null || this.clientLogId.length() == 0) {
+				apiStatus = ApiStatusCode.CLIENT_LOG_ID_REQUIRED;
 				jsonReturn.put("apiStatus", apiStatus);
 				return jsonReturn;
 			}
 			
-            feedback = new Feedback();
+			clientLog = new ClientLog();
             JSONObject json = new JsonRepresentation(entity).getJsonObject();
-            if (this.feedbackId != null) {
-                Key key = KeyFactory.stringToKey(this.feedbackId);
-                feedback = (Feedback)em.createNamedQuery("Feedback.getByKey")
+            if (this.clientLogId != null) {
+                Key key = KeyFactory.stringToKey(this.clientLogId);
+                clientLog = (ClientLog)em.createNamedQuery("ClientLog.getByKey")
                 	.setParameter("key", key)
                 	.getSingleResult();
             }
             if(json.has("status")) {
             	String status = json.getString("status").toLowerCase();
-            	if(feedback.isStatusValid(status)) {
-                    feedback.setStatus(status);
+            	if(clientLog.isStatusValid(status)) {
+            		clientLog.setStatus(status);
             	} else {
             		apiStatus = ApiStatusCode.INVALID_STATUS;
             	}
             }
-            em.persist(feedback);
+            em.persist(clientLog);
             em.getTransaction().commit();
         } catch (IOException e) {
             log.severe("error extracting JSON object from Post");
@@ -327,11 +334,11 @@ public class FeedbackResource extends ServerResource {
             e.printStackTrace();
             this.setStatus(Status.SERVER_ERROR_INTERNAL);
         } catch (NoResultException e) {
-			// feedback ID passed in is not valid
-			log.info("Feedback ID not found");
-			apiStatus = ApiStatusCode.FEEDBACK_NOT_FOUND;
+			// clientLogId passed in is not valid
+			log.info("Client Log not found");
+			apiStatus = ApiStatusCode.CLIENT_LOG_NOT_FOUND;
 		} catch (NonUniqueResultException e) {
-			log.severe("should never happen - two or more feedback have same key");
+			log.severe("should never happen - two or more client logs have same key");
 			this.setStatus(Status.SERVER_ERROR_INTERNAL);
 		} finally {
             if (em.getTransaction().isActive()) {
@@ -350,5 +357,4 @@ public class FeedbackResource extends ServerResource {
 
 		return jsonReturn;
     }
-
 }

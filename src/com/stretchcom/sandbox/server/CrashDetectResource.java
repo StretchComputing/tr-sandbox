@@ -12,6 +12,9 @@ import javax.persistence.NonUniqueResultException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.restlet.data.Form;
+import org.restlet.data.Parameter;
+import org.restlet.data.Reference;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -28,11 +31,22 @@ import com.google.appengine.api.datastore.KeyFactory;
 public class CrashDetectResource extends ServerResource {
 	private static final Logger log = Logger.getLogger(CrashDetectResource.class.getName());
 	private String crashDetectId;
+    private String listStatus;
 
     @Override
     protected void doInit() throws ResourceException {
         log.info("in doInit");
         crashDetectId = (String) getRequest().getAttributes().get("id");
+        
+		Form form = getRequest().getResourceRef().getQueryAsForm();
+		for (Parameter parameter : form) {
+			log.info("parameter " + parameter.getName() + " = " + parameter.getValue());
+			if(parameter.getName().equals("status"))  {
+				this.listStatus = (String)parameter.getValue().toLowerCase();
+				this.listStatus = Reference.decode(this.listStatus);
+				log.info("CrashDetectResource() - decoded status = " + this.listStatus);
+			} 
+		}
     }
 
     @Get("json")
@@ -161,7 +175,7 @@ public class CrashDetectResource extends ServerResource {
 			
         	Date detectedDate = crashDetect.getDetectedDate();
         	// TODO support time zones
-        	if(detectedDate != null) jsonReturn.put("detectedDate", GMT.convertToLocalDate(detectedDate, null));
+        	if(detectedDate != null) jsonReturn.put("detectedDate", GMT.convertToLocalDate(detectedDate, null, "EEE, MMM d, yyyy 'at' HH:mm a"));
         	
         	jsonReturn.put("userName", crashDetect.getUserName());
         	jsonReturn.put("instanceUrl", crashDetect.getInstanceUrl());
@@ -205,8 +219,25 @@ public class CrashDetectResource extends ServerResource {
 		String apiStatus = ApiStatusCode.SUCCESS;
 		this.setStatus(Status.SUCCESS_OK);
 		try {
-			// cannot use a NamedQuery for a batch get of keys
-			List<CrashDetect> crashDetects = (List<CrashDetect>)em.createNamedQuery("CrashDetect.getAll").getResultList();
+			List<CrashDetect> crashDetects = null;
+			if(this.listStatus != null) {
+			    if(this.listStatus.equalsIgnoreCase(CrashDetect.NEW_STATUS) || this.listStatus.equalsIgnoreCase(CrashDetect.ARCHIVED_STATUS)){
+			    	crashDetects= (List<CrashDetect>)em.createNamedQuery("CrashDetect.getByStatus")
+							.setParameter("status", this.listStatus)
+							.getResultList();
+			    } else if(this.listStatus.equalsIgnoreCase(CrashDetect.ALL_STATUS)) {
+			    	crashDetects= (List<CrashDetect>)em.createNamedQuery("CrashDetect.getAll").getResultList();
+			    } else {
+					apiStatus = ApiStatusCode.INVALID_STATUS_PARAMETER;
+					jsonReturn.put("apiStatus", apiStatus);
+					return jsonReturn;
+			    }
+			} else {
+				// by default, only get 'new' feedback
+				crashDetects= (List<CrashDetect>)em.createNamedQuery("CrashDetect.getByStatus")
+						.setParameter("status", CrashDetect.NEW_STATUS)
+						.getResultList();
+			}
 
 			JSONArray crashDetectJsonArray = new JSONArray();
 			for (CrashDetect cd : crashDetects) {
@@ -216,7 +247,7 @@ public class CrashDetectResource extends ServerResource {
 				
             	Date detectedDate = cd.getDetectedDate();
             	// TODO support time zones
-            	if(detectedDate != null) crashDetectJsonObj.put("detectedDate", GMT.convertToLocalDate(detectedDate, null));
+            	if(detectedDate != null) crashDetectJsonObj.put("detectedDate", GMT.convertToLocalDate(detectedDate, null, "EEE, MMM d 'at' HH:mm a"));
             	
             	crashDetectJsonObj.put("userName", cd.getUserName());
             	crashDetectJsonObj.put("instanceUrl", cd.getInstanceUrl());
@@ -276,7 +307,7 @@ public class CrashDetectResource extends ServerResource {
                 	.getSingleResult();
             }
             if(json.has("status")) {
-            	String status = json.getString("status");
+            	String status = json.getString("status").toLowerCase();
             	if(crashDetect.isStatusValid(status)) {
             		crashDetect.setStatus(status);
             	} else {

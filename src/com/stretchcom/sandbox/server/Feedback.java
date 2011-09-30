@@ -17,7 +17,11 @@ import com.google.appengine.api.datastore.Text;
 @NamedQueries({
     @NamedQuery(
     		name="Feedback.getAll",
-    		query="SELECT fb FROM Feedback fb"
+    		query="SELECT fb FROM Feedback fb ORDER BY fb.recordedDate DESC"
+    ),
+    @NamedQuery(
+    		name="Feedback.getByStatus",
+    		query="SELECT fb FROM Feedback fb WHERE fb.status = :status"
     ),
     @NamedQuery(
     		name="Feedback.getByKey",
@@ -27,6 +31,7 @@ import com.google.appengine.api.datastore.Text;
 public class Feedback {
 	public final static String NEW_STATUS = "new";
 	public final static String ARCHIVED_STATUS = "archived";
+	public final static String ALL_STATUS = "all";
 	
 	@Basic private Text voiceBase64;
 	private Date recordedDate;
