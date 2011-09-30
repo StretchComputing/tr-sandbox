@@ -22,15 +22,21 @@ public class GMT {
 		}
 	}
 	
-	// only supports the format: YYYY-MM-DD hh:mm
 	public static String convertToLocalDate(Date theDate, TimeZone theTimeZone) {
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+		// defaults format to: "yyyy-MM-dd HH:mm"
+		return convertToLocalDate(theDate, theTimeZone, "yyyy-MM-dd HH:mm");
+	}
+	
+	public static String convertToLocalDate(Date theDate, TimeZone theTimeZone, String theDateFormat) {
+		if(theDate == null || theDateFormat == null) {
+			return null;
+		}
+		
+		DateFormat df = new SimpleDateFormat(theDateFormat);
 		if(theTimeZone != null) df.setTimeZone(theTimeZone);
 		
 		String timezoneStr = theTimeZone == null ? "<not_specified>" : theTimeZone.getDisplayName();
 		log.info("convertToLocalDate(): timezone = " + timezoneStr + " local date = " + df.format(theDate));
 		return df.format(theDate);
 	}
-	
-
 }

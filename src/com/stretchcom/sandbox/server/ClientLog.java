@@ -16,7 +16,11 @@ import com.google.appengine.api.datastore.Text;
 @NamedQueries({
     @NamedQuery(
     		name="ClientLog.getAll",
-    		query="SELECT cl FROM ClientLog cl"
+    		query="SELECT cl FROM ClientLog cl ORDER BY cl.createdDate DESC"
+    ),
+    @NamedQuery(
+    		name="ClientLog.getByStatus",
+    		query="SELECT cl FROM ClientLog cl WHERE cl.status = :status"
     ),
     @NamedQuery(
     		name="ClientLog.getByKey",
@@ -26,6 +30,7 @@ import com.google.appengine.api.datastore.Text;
 public class ClientLog {
 	public final static String NEW_STATUS = "new";
 	public final static String ARCHIVED_STATUS = "archived";
+	public final static String ALL_STATUS = "all";
 	
 	public final static String DEBUG_LOG_LEVEL = "debug";
 	public final static String INFO_LOG_LEVEL = "info";
@@ -98,7 +103,7 @@ public class ClientLog {
 	}
 	
 	public Boolean isStatusValid(String theStatus) {
-		if(theStatus.equals(CrashDetect.NEW_STATUS) || theStatus.equals(CrashDetect.ARCHIVED_STATUS)) return true;
+		if(theStatus.equals(ClientLog.NEW_STATUS) || theStatus.equals(ClientLog.ARCHIVED_STATUS)) return true;
 		return false;
 	}
 	
@@ -109,5 +114,12 @@ public class ClientLog {
 	public void setLogLevel(String logLevel) {
 		this.logLevel = logLevel;
 	}
-
+	
+	public Boolean isLogLevelValid(String theLogLevel) {
+		if(theLogLevel.equals(ClientLog.DEBUG_LOG_LEVEL) || theLogLevel.equals(ClientLog.INFO_LOG_LEVEL) ||
+		   theLogLevel.equals(ClientLog.ERROR_LOG_LEVEL) || theLogLevel.equals(ClientLog.EXCEPTION_LOG_LEVEL)) {
+			return true;
+		}
+		return false;
+	}
 }

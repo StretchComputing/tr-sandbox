@@ -16,7 +16,11 @@ import com.google.appengine.api.datastore.Text;
 @NamedQueries({
     @NamedQuery(
     		name="CrashDetect.getAll",
-    		query="SELECT cd FROM CrashDetect cd"
+    		query="SELECT cd FROM CrashDetect cd ORDER BY cd.detectedDate DESC"
+    ),
+    @NamedQuery(
+    		name="CrashDetect.getByStatus",
+    		query="SELECT cd FROM CrashDetect cd WHERE cd.status = :status"
     ),
     @NamedQuery(
     		name="CrashDetect.getByKey",
@@ -26,6 +30,7 @@ import com.google.appengine.api.datastore.Text;
 public class CrashDetect {
 	public final static String NEW_STATUS = "new";
 	public final static String ARCHIVED_STATUS = "archived";
+	public final static String ALL_STATUS = "all";
 
 	private String summary;
 	// TODO support time zone and GMT for dates

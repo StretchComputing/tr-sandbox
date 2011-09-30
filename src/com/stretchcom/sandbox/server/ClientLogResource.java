@@ -12,6 +12,9 @@ import javax.persistence.NonUniqueResultException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.restlet.data.Form;
+import org.restlet.data.Parameter;
+import org.restlet.data.Reference;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -29,11 +32,22 @@ import com.google.appengine.api.datastore.Text;
 public class ClientLogResource extends ServerResource {
 	private static final Logger log = Logger.getLogger(ClientLogResource.class.getName());
 	private String clientLogId;
+    private String listStatus;
 
     @Override
     protected void doInit() throws ResourceException {
         log.info("in doInit");
         clientLogId = (String) getRequest().getAttributes().get("id");
+        
+		Form form = getRequest().getResourceRef().getQueryAsForm();
+		for (Parameter parameter : form) {
+			log.info("parameter " + parameter.getName() + " = " + parameter.getValue());
+			if(parameter.getName().equals("status"))  {
+				this.listStatus = (String)parameter.getValue().toLowerCase();
+				this.listStatus = Reference.decode(this.listStatus);
+				log.info("ClientLogResource() - decoded status = " + this.listStatus);
+			} 
+		}
     }
 
     @Get("json")
@@ -77,7 +91,13 @@ public class ClientLogResource extends ServerResource {
 			JSONObject json = jsonRep.getJsonObject();
 
 			if(json.has("logLevel")) {
-				clientLog.setLogLevel(json.getString("logLevel"));
+				String logLevel = json.getString("logLevel").toLowerCase();
+				clientLog.setLogLevel(logLevel);
+				if(!clientLog.isLogLevelValid(logLevel)) {
+					apiStatus = ApiStatusCode.INVALID_LOG_LEVEL;
+					jsonReturn.put("apiStatus", apiStatus);
+					return new JsonRepresentation(jsonReturn);
+				}
 			} else {
 				// default to error
 				clientLog.setLogLevel(ClientLog.ERROR_LOG_LEVEL);
@@ -163,7 +183,7 @@ public class ClientLogResource extends ServerResource {
 			
         	Date createdDate = clientLog.getCreatedDate();
         	// TODO support time zones
-        	if(createdDate != null) jsonReturn.put("createdDate", GMT.convertToLocalDate(createdDate, null));
+        	if(createdDate != null) jsonReturn.put("createdDate", GMT.convertToLocalDate(createdDate, null, "EEE, MMM d, yyyy 'at' HH:mm a"));
         	jsonReturn.put("userName", clientLog.getUserName());
         	jsonReturn.put("instanceUrl", clientLog.getInstanceUrl());
         	jsonReturn.put("logLevel", clientLog.getLogLevel());
@@ -206,8 +226,25 @@ public class ClientLogResource extends ServerResource {
 		String apiStatus = ApiStatusCode.SUCCESS;
 		this.setStatus(Status.SUCCESS_OK);
 		try {
-			// cannot use a NamedQuery for a batch get of keys
-			List<ClientLog> clientLogs = (List<ClientLog>)em.createNamedQuery("ClientLog.getAll").getResultList();
+			List<ClientLog> clientLogs = null;
+			if(this.listStatus != null) {
+			    if(this.listStatus.equalsIgnoreCase(ClientLog.NEW_STATUS) || this.listStatus.equalsIgnoreCase(ClientLog.ARCHIVED_STATUS)){
+			    	clientLogs= (List<ClientLog>)em.createNamedQuery("ClientLog.getByStatus")
+							.setParameter("status", this.listStatus)
+							.getResultList();
+			    } else if(this.listStatus.equalsIgnoreCase(ClientLog.ALL_STATUS)) {
+			    	clientLogs= (List<ClientLog>)em.createNamedQuery("ClientLog.getAll").getResultList();
+			    } else {
+					apiStatus = ApiStatusCode.INVALID_STATUS_PARAMETER;
+					jsonReturn.put("apiStatus", apiStatus);
+					return jsonReturn;
+			    }
+			} else {
+				// by default, only get 'new' feedback
+				clientLogs= (List<ClientLog>)em.createNamedQuery("ClientLog.getByStatus")
+						.setParameter("status", ClientLog.NEW_STATUS)
+						.getResultList();
+			}
 
 			JSONArray clientLogJsonArray = new JSONArray();
 			for (ClientLog cl : clientLogs) {
@@ -217,7 +254,7 @@ public class ClientLogResource extends ServerResource {
 				
             	Date createdDate = cl.getCreatedDate();
             	// TODO support time zones
-            	if(createdDate != null) clientLogJsonObj.put("createdDate", GMT.convertToLocalDate(createdDate, null));
+            	if(createdDate != null) clientLogJsonObj.put("createdDate", GMT.convertToLocalDate(createdDate, null, "EEE, MMM d 'at' HH:mm a"));
             	
             	clientLogJsonObj.put("userName", cl.getUserName());
             	clientLogJsonObj.put("instanceUrl", cl.getInstanceUrl());
@@ -280,7 +317,7 @@ public class ClientLogResource extends ServerResource {
                 	.getSingleResult();
             }
             if(json.has("status")) {
-            	String status = json.getString("status");
+            	String status = json.getString("status").toLowerCase();
             	if(clientLog.isStatusValid(status)) {
             		clientLog.setStatus(status);
             	} else {

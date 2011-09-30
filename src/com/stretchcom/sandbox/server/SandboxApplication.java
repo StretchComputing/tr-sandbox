@@ -30,6 +30,9 @@ public class SandboxApplication extends Application {
         router.attach("/feedbacks/{id}", FeedbackResource.class);
         router.attach("/feedback", FeedbackResource.class);
         router.attach("/feedback/{id}", FeedbackResource.class);
+        
+        router.attach("/clientLogs", ClientLogResource.class);
+        router.attach("/clientLogs/{id}", ClientLogResource.class);
 
         return router;
     }

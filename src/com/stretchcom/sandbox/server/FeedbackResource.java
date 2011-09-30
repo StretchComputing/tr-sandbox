@@ -12,6 +12,9 @@ import javax.persistence.NonUniqueResultException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.restlet.data.Form;
+import org.restlet.data.Parameter;
+import org.restlet.data.Reference;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -30,13 +33,26 @@ import com.stretchcom.sandbox.server.EMF;
 public class FeedbackResource extends ServerResource {
 	private static final Logger log = Logger.getLogger(FeedbackResource.class.getName());
     private String feedbackId;
+    private String listStatus;
 
     @Override
     protected void doInit() throws ResourceException {
         log.info("in doInit");
         feedbackId = (String) getRequest().getAttributes().get("id");
+        
+		Form form = getRequest().getResourceRef().getQueryAsForm();
+		for (Parameter parameter : form) {
+			log.info("parameter " + parameter.getName() + " = " + parameter.getValue());
+			if(parameter.getName().equals("status"))  {
+				this.listStatus = (String)parameter.getValue().toLowerCase();
+				this.listStatus = Reference.decode(this.listStatus);
+				log.info("FeedbackResource() - decoded status = " + this.listStatus);
+			} 
+		}
     }
 
+    // Handles 'Get Feedback Info API'
+    // Handles 'Get List of Feedback API
     @Get("json")
     public JsonRepresentation get(Variant variant) {
          JSONObject jsonReturn;
@@ -47,7 +63,7 @@ public class FeedbackResource extends ServerResource {
         	log.info("in Get Feedback Info API");
         	jsonReturn = getFeedbackInfoJson(feedbackId);
         } else {
-            // Get List of Feedbacks API
+            // Get List of Feedback API
         	log.info("Get List of Feedbacks API");
         	jsonReturn = getListOfFeedbacksJson();
         }
@@ -55,6 +71,7 @@ public class FeedbackResource extends ServerResource {
         return new JsonRepresentation(jsonReturn);
     }
     
+    // Handles 'Update Feedback API'
     @Put("json")
     public JsonRepresentation put(Representation entity) {
         log.info("in put for Feedback resource");
@@ -163,7 +180,7 @@ public class FeedbackResource extends ServerResource {
 			
         	Date recordedDate = feedback.getRecordedDate();
         	// TODO support time zones
-        	if(recordedDate != null) jsonReturn.put("recordedDate", GMT.convertToLocalDate(recordedDate, null));
+        	if(recordedDate != null) jsonReturn.put("recordedDate", GMT.convertToLocalDate(recordedDate, null, "EEE, MMM d, yyyy 'at' HH:mm a"));
         	
         	jsonReturn.put("userName", feedback.getUserName());
         	jsonReturn.put("instanceUrl", feedback.getInstanceUrl());
@@ -173,7 +190,6 @@ public class FeedbackResource extends ServerResource {
         	if(status == null || status.length() == 0) {status = "new";}
         	jsonReturn.put("status", status);
         	
-        	jsonReturn.put("voice", feedback.getVoiceBase64());
             log.info("JSON return object built successfully");	
 		} catch (JSONException e) {
 			log.severe("error converting json representation into a JSON object");
@@ -206,8 +222,25 @@ public class FeedbackResource extends ServerResource {
 		String apiStatus = ApiStatusCode.SUCCESS;
 		this.setStatus(Status.SUCCESS_OK);
 		try {
-			// cannot use a NamedQuery for a batch get of keys
-			List<Feedback> feedbacks = (List<Feedback>)em.createNamedQuery("Feedback.getAll").getResultList();
+			List<Feedback> feedbacks = null;
+			if(this.listStatus != null) {
+			    if(this.listStatus.equalsIgnoreCase(Feedback.NEW_STATUS) || this.listStatus.equalsIgnoreCase(Feedback.ARCHIVED_STATUS)){
+					feedbacks= (List<Feedback>)em.createNamedQuery("Feedback.getByStatus")
+							.setParameter("status", this.listStatus)
+							.getResultList();
+			    } else if(this.listStatus.equalsIgnoreCase(Feedback.ALL_STATUS)) {
+					feedbacks= (List<Feedback>)em.createNamedQuery("Feedback.getAll").getResultList();
+			    } else {
+					apiStatus = ApiStatusCode.INVALID_STATUS_PARAMETER;
+					jsonReturn.put("apiStatus", apiStatus);
+					return jsonReturn;
+			    }
+			} else {
+				// by default, only get 'new' feedback
+				feedbacks= (List<Feedback>)em.createNamedQuery("Feedback.getByStatus")
+						.setParameter("status", Feedback.NEW_STATUS)
+						.getResultList();
+			}
 
 			JSONArray feedbackJsonArray = new JSONArray();
 			for (Feedback fb : feedbacks) {
@@ -217,7 +250,7 @@ public class FeedbackResource extends ServerResource {
 				
             	Date recordedDate = fb.getRecordedDate();
             	// TODO support time zones
-            	if(recordedDate != null) feedbackJsonObj.put("recordedDate", GMT.convertToLocalDate(recordedDate, null));
+            	if(recordedDate != null) feedbackJsonObj.put("recordedDate", GMT.convertToLocalDate(recordedDate, null, "EEE, MMM d 'at' HH:mm a"));
             	
             	feedbackJsonObj.put("userName", fb.getUserName());
             	feedbackJsonObj.put("instanceUrl", fb.getInstanceUrl());
@@ -277,7 +310,7 @@ public class FeedbackResource extends ServerResource {
                 	.getSingleResult();
             }
             if(json.has("status")) {
-            	String status = json.getString("status");
+            	String status = json.getString("status").toLowerCase();
             	if(feedback.isStatusValid(status)) {
                     feedback.setStatus(status);
             	} else {
