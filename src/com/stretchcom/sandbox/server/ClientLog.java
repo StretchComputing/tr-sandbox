@@ -16,11 +16,11 @@ import com.google.appengine.api.datastore.Text;
 @NamedQueries({
     @NamedQuery(
     		name="ClientLog.getAll",
-    		query="SELECT cl FROM ClientLog cl ORDER BY cl.createdDate DESC"
+    		query="SELECT cl FROM ClientLog cl ORDER BY cl.createdGmtDate DESC"
     ),
     @NamedQuery(
     		name="ClientLog.getByStatus",
-    		query="SELECT cl FROM ClientLog cl WHERE cl.status = :status"
+    		query="SELECT cl FROM ClientLog cl WHERE cl.status = :status  ORDER BY cl.createdGmtDate DESC"
     ),
     @NamedQuery(
     		name="ClientLog.getByKey",
@@ -40,7 +40,7 @@ public class ClientLog {
 	private String logLevel;
 	private String message;
 	// TODO support time zone and GMT for dates
-	private Date createdDate;
+	private Date createdGmtDate;
 	private String userName;
 	private Text stackBackTrace;
 	private String instanceUrl;
@@ -62,12 +62,12 @@ public class ClientLog {
 		this.message = message;
 	}
 
-	public Date getCreatedDate() {
-		return createdDate;
+	public Date getCreatedGmtDate() {
+		return createdGmtDate;
 	}
 
-	public void setCreatedDate(Date createdDate) {
-		this.createdDate = createdDate;
+	public void setCreatedGmtDate(Date createdGmtDate) {
+		this.createdGmtDate = createdGmtDate;
 	}
 
 	public String getUserName() {

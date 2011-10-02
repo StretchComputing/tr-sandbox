@@ -17,11 +17,11 @@ import com.google.appengine.api.datastore.Text;
 @NamedQueries({
     @NamedQuery(
     		name="Feedback.getAll",
-    		query="SELECT fb FROM Feedback fb ORDER BY fb.recordedDate DESC"
+    		query="SELECT fb FROM Feedback fb ORDER BY fb.recordedGmtDate DESC"
     ),
     @NamedQuery(
     		name="Feedback.getByStatus",
-    		query="SELECT fb FROM Feedback fb WHERE fb.status = :status"
+    		query="SELECT fb FROM Feedback fb WHERE fb.status = :status ORDER BY fb.recordedGmtDate DESC"
     ),
     @NamedQuery(
     		name="Feedback.getByKey",
@@ -34,7 +34,7 @@ public class Feedback {
 	public final static String ALL_STATUS = "all";
 	
 	@Basic private Text voiceBase64;
-	private Date recordedDate;
+	private Date recordedGmtDate;
 	private String userName;
 	private String instanceUrl;
 	private String status;
@@ -55,12 +55,12 @@ public class Feedback {
 		this.voiceBase64 = new Text(voiceBase64);
 	}
 	
-	public Date getRecordedDate() {
-		return recordedDate;
+	public Date getRecordedGmtDate() {
+		return recordedGmtDate;
 	}
 
-	public void setRecordedDate(Date recordedDate) {
-		this.recordedDate = recordedDate;
+	public void setRecordedGmtDate(Date recordedGmtDate) {
+		this.recordedGmtDate = recordedGmtDate;
 	}
 
 	public String getUserName() {

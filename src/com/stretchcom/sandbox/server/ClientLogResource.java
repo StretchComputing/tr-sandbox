@@ -3,6 +3,7 @@ package com.stretchcom.sandbox.server;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
@@ -123,7 +124,7 @@ public class ClientLogResource extends ServerResource {
 			clientLog.setStatus(CrashDetect.NEW_STATUS);
 			
 			// Default created date is today
-			clientLog.setCreatedDate(new Date());
+			clientLog.setCreatedGmtDate(new Date());
 
 			em.persist(clientLog);
 			em.getTransaction().commit();
@@ -135,7 +136,7 @@ public class ClientLogResource extends ServerResource {
 			String baseUri = this.getRequest().getHostRef().getIdentifier();
 			this.getResponse().setLocationRef(baseUri + "/");
 
-			jsonReturn.put("clientLogId", keyWebStr);
+			jsonReturn.put("id", keyWebStr);
 		} catch (IOException e) {
 			log.severe("error extracting JSON object from Post");
 			e.printStackTrace();
@@ -179,11 +180,14 @@ public class ClientLogResource extends ServerResource {
 				.setParameter("key", clientLogKey)
 				.getSingleResult();
 
-    		jsonReturn.put("clientLogId", KeyFactory.keyToString(clientLog.getKey()));
+    		jsonReturn.put("id", KeyFactory.keyToString(clientLog.getKey()));
 			
-        	Date createdDate = clientLog.getCreatedDate();
+        	Date createdDate = clientLog.getCreatedGmtDate();
         	// TODO support time zones
-        	if(createdDate != null) jsonReturn.put("createdDate", GMT.convertToLocalDate(createdDate, null, "EEE, MMM d, yyyy 'at' HH:mm a"));
+        	if(createdDate != null) {
+        		TimeZone tz = GMT.getTimeZone(SandboxApplication.DEFAULT_LOCAL_TIME_ZONE);
+        		jsonReturn.put("date", GMT.convertToLocalDate(createdDate, tz, SandboxApplication.INFO_DATE_FORMAT));
+        	}
         	jsonReturn.put("userName", clientLog.getUserName());
         	jsonReturn.put("instanceUrl", clientLog.getInstanceUrl());
         	jsonReturn.put("logLevel", clientLog.getLogLevel());
@@ -250,11 +254,14 @@ public class ClientLogResource extends ServerResource {
 			for (ClientLog cl : clientLogs) {
 				JSONObject clientLogJsonObj = new JSONObject();
 				
-				clientLogJsonObj.put("clientLogId", KeyFactory.keyToString(cl.getKey()));
+				clientLogJsonObj.put("id", KeyFactory.keyToString(cl.getKey()));
 				
-            	Date createdDate = cl.getCreatedDate();
+            	Date createdDate = cl.getCreatedGmtDate();
             	// TODO support time zones
-            	if(createdDate != null) clientLogJsonObj.put("createdDate", GMT.convertToLocalDate(createdDate, null, "EEE, MMM d 'at' HH:mm a"));
+            	if(createdDate != null) {
+            		TimeZone tz = GMT.getTimeZone(SandboxApplication.DEFAULT_LOCAL_TIME_ZONE);
+            		clientLogJsonObj.put("date", GMT.convertToLocalDate(createdDate, tz, SandboxApplication.LIST_DATE_FORMAT));
+            	}
             	
             	clientLogJsonObj.put("userName", cl.getUserName());
             	clientLogJsonObj.put("instanceUrl", cl.getInstanceUrl());

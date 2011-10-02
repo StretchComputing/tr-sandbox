@@ -3,6 +3,7 @@ package com.stretchcom.sandbox.server;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
@@ -101,13 +102,21 @@ public class CrashDetectResource extends ServerResource {
 				crashDetect.setStackDataBase64(json.getString("stackData"));
 			}
 			
-			if(json.has("detectedDate")) {
-				String detectedDateStr = json.getString("detectedDate");
-				Date gmtDetectedDate = GMT.stringToDate(detectedDateStr, null);
-				if(gmtDetectedDate == null) {
-					log.info("invalid detected date format passed in");
+			// TODO support a time zone passed in
+			if(json.has("date")) {
+				String detectedDateStr = json.getString("date");
+				
+				if(detectedDateStr != null || detectedDateStr.trim().length() != 0) {
+					TimeZone tz = GMT.getTimeZone(SandboxApplication.DEFAULT_LOCAL_TIME_ZONE);
+					Date gmtDetectedDate = GMT.convertToGmtDate(detectedDateStr, true, tz);
+					if(gmtDetectedDate == null) {
+						log.info("invalid detected date format passed in");
+						apiStatus = ApiStatusCode.INVALID_DETECTED_DATE_PARAMETER;
+						jsonReturn.put("apiStatus", apiStatus);
+						return new JsonRepresentation(jsonReturn);
+					}
+					crashDetect.setDetectedGmtDate(gmtDetectedDate);
 				}
-				crashDetect.setDetectedDate(gmtDetectedDate);
 			}
 			
 			if(json.has("instanceUrl")) {
@@ -127,7 +136,7 @@ public class CrashDetectResource extends ServerResource {
 			String baseUri = this.getRequest().getHostRef().getIdentifier();
 			this.getResponse().setLocationRef(baseUri + "/");
 
-			jsonReturn.put("crashDetectId", keyWebStr);
+			jsonReturn.put("id", keyWebStr);
 		} catch (IOException e) {
 			log.severe("error extracting JSON object from Post");
 			e.printStackTrace();
@@ -171,11 +180,15 @@ public class CrashDetectResource extends ServerResource {
 				.setParameter("key", crashDetectKey)
 				.getSingleResult();
 
-    		jsonReturn.put("crashDetectId", KeyFactory.keyToString(crashDetect.getKey()));
+    		jsonReturn.put("id", KeyFactory.keyToString(crashDetect.getKey()));
+    		jsonReturn.put("summary", crashDetect.getSummary());
 			
-        	Date detectedDate = crashDetect.getDetectedDate();
+        	Date detectedDate = crashDetect.getDetectedGmtDate();
         	// TODO support time zones
-        	if(detectedDate != null) jsonReturn.put("detectedDate", GMT.convertToLocalDate(detectedDate, null, "EEE, MMM d, yyyy 'at' HH:mm a"));
+        	if(detectedDate != null) {
+        		TimeZone tz = GMT.getTimeZone(SandboxApplication.DEFAULT_LOCAL_TIME_ZONE);
+        		jsonReturn.put("date", GMT.convertToLocalDate(detectedDate, tz, SandboxApplication.INFO_DATE_FORMAT));
+        	}
         	
         	jsonReturn.put("userName", crashDetect.getUserName());
         	jsonReturn.put("instanceUrl", crashDetect.getInstanceUrl());
@@ -243,11 +256,15 @@ public class CrashDetectResource extends ServerResource {
 			for (CrashDetect cd : crashDetects) {
 				JSONObject crashDetectJsonObj = new JSONObject();
 				
-				crashDetectJsonObj.put("crashDetectId", KeyFactory.keyToString(cd.getKey()));
+				crashDetectJsonObj.put("id", KeyFactory.keyToString(cd.getKey()));
+				crashDetectJsonObj.put("summary", cd.getSummary());
 				
-            	Date detectedDate = cd.getDetectedDate();
+            	Date detectedDate = cd.getDetectedGmtDate();
             	// TODO support time zones
-            	if(detectedDate != null) crashDetectJsonObj.put("detectedDate", GMT.convertToLocalDate(detectedDate, null, "EEE, MMM d 'at' HH:mm a"));
+            	if(detectedDate != null) {
+            		TimeZone tz = GMT.getTimeZone(SandboxApplication.DEFAULT_LOCAL_TIME_ZONE);
+            		crashDetectJsonObj.put("date", GMT.convertToLocalDate(detectedDate, tz, SandboxApplication.LIST_DATE_FORMAT));
+            	}
             	
             	crashDetectJsonObj.put("userName", cd.getUserName());
             	crashDetectJsonObj.put("instanceUrl", cd.getInstanceUrl());
