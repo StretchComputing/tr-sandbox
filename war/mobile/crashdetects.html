@@ -18,6 +18,7 @@
     html += '<div>User: ' + item['userName'] + '</div>';
     html += '<div>For: ' + item['instanceUrl'] + '</div>';
     html += '<div>Status: ' + item['status'] + '</div>';
+    html += '<div>Summary: ' + item['summary'] + '</div>';
     html += '<div>';
     html += '  Crash Stack Data: ';
     html += '  <a href="/crashStackData/' + item['id'] + '.plcrash" data-ajax="false">plcrash file</a>';
@@ -30,16 +31,16 @@
 <body>
   <div data-role="page" id="index" data-title="Crash Detects">
     <div data-role="header">
-      <a href="index.html">Home</a>
+      <a href="index.html" rel="external">Home</a>
       <h1>Crash Detects</h1>
-      <a href="#archives" class="ui-btn-right" data-theme="b">Archives</a>
+      <a href="#archives" data-theme="b">Archives</a>
     </div>
     <div data-role="content"></div>
   </div>
 
   <div data-role="page" id="archives" data-title="Crash Detect Archives">
     <div data-role="header">
-      <a href="index.html">Home</a>
+      <a href="index.html" rel="external">Home</a>
       <h1>Crash Detect Archives</h1>
       <a href="#index" class="ui-btn-right" data-theme="b">Active</a>
     </div>
