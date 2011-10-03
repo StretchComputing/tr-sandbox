@@ -9,17 +9,9 @@
 <script src="http://code.jquery.com/mobile/latest/jquery.mobile.min.js"></script>
 <script src="/js/script.js"></script>
 <script>
-  function listTitle() {
-    return 'New Crash Detects';
-  }
-
   function listItem(item) {
     var display = item['detectedDate'] + ' - ' + item['userName'] + ' - ' + item['instanceUrl'];
     return '<li><a href="#item?id=' + item['crashDetectId'] + '">' + display + '</a></li>';
-  }
-
-  function itemTitle() {
-    return 'Crash Detect';
   }
 
   function itemName() {
@@ -41,18 +33,26 @@
 </head>
 
 <body>
-  <div data-role="page" id="index">
+  <div data-role="page" id="index" data-title="Crash Detects">
     <div data-role="header">
-      <h1></h1>
-      <a href="#" class="ui-btn-right" data-theme="b">Archives</a>
+      <h1>Crash Detects</h1>
+      <a href="#archives" class="ui-btn-right" data-theme="b">Archives</a>
     </div>
     <div data-role="content"></div>
   </div>
 
-  <div id="item" data-role="page">
+  <div data-role="page" id="archives" data-title="Crash Detect Archives">
+    <div data-role="header">
+      <h1>Crash Detect Archives</h1>
+      <a href="#index" class="ui-btn-right" data-theme="b">Active</a>
+    </div>
+    <div data-role="content"></div>
+  </div>
+
+  <div id="item" data-role="page" data-title="Crash Detect">
     <div data-role="header">
       <a href="#" data-rel="back">Back</a>
-      <h1></h1>
+      <h1>Crash Detect</h1>
     </div>
     <div data-role="content"></div>
   </div>
