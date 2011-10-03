@@ -10,8 +10,8 @@
 <script src="/js/script.js"></script>
 <script>
   function listItem(item) {
-    var display = item['recordedDate'] + ' - ' + item['userName'] + ' - ' + item['instanceUrl'];
-    return '<li><a href="#item?id=' + item['feedbackId'] + '">' + display + '</a></li>';
+    var display = item['date'] + ' - ' + item['userName'] + ' - ' + item['instanceUrl'];
+    return '<li><a href="#item?id=' + item['id'] + '">' + display + '</a></li>';
   }
 
   function itemName() {
@@ -19,14 +19,14 @@
   }
 
   function itemDetails(item) {
-    var html = '<div>Recorded: ' + item['recordedDate'] + '</div>';
+    var html = '<div>Recorded: ' + item['date'] + '</div>';
     html += '<div>By: ' + item['userName'] + '</div>';
     html += '<div>For: ' + item['instanceUrl'] + '</div>';
     html += '<div>Status: ' + item['status'] + '</div>';
     html += '<div>';
     html += '  Feedback: ';
     html += '  <audio controls>';
-    html += '    <source src="/audio/' + item['feedbackId'] + '.mp4" type="audio/mp4">'
+    html += '    <source src="/audio/' + item['id'] + '.mp4" type="audio/mp4">'
     html += '  </audio>';
     html += '</div>';
     return html;

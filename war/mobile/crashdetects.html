@@ -10,8 +10,8 @@
 <script src="/js/script.js"></script>
 <script>
   function listItem(item) {
-    var display = item['detectedDate'] + ' - ' + item['userName'] + ' - ' + item['instanceUrl'];
-    return '<li><a href="#item?id=' + item['crashDetectId'] + '">' + display + '</a></li>';
+    var display = item['date'] + ' - ' + item['userName'] + ' - ' + item['instanceUrl'];
+    return '<li><a href="#item?id=' + item['id'] + '">' + display + '</a></li>';
   }
 
   function itemName() {
@@ -19,13 +19,13 @@
   }
 
   function itemDetails(item) {
-    var html = '<div>Detected Date: ' + item['detectedDate'] + '</div>';
+    var html = '<div>Detected Date: ' + item['date'] + '</div>';
     html += '<div>User: ' + item['userName'] + '</div>';
     html += '<div>For: ' + item['instanceUrl'] + '</div>';
     html += '<div>Status: ' + item['status'] + '</div>';
     html += '<div>';
     html += '  Crash Stack Data: ';
-    html += '  <a href="/crashStackData/' + item['crashDetectId'] + '.plcrash" data-ajax="false">plcrash file</a>';
+    html += '  <a href="/crashStackData/' + item['id'] + '.plcrash" data-ajax="false">plcrash file</a>';
     html += '</div>'
     return html;
   }
