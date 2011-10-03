@@ -39,7 +39,8 @@ function showList(page, list) {
   var markup = '<ul data-role="listview">';
   for (i = 0; i < list[itemName()].length; i++) {
     var item = list[itemName()][i];
-    markup += listItem(item);
+    var display = item['date'] + ' - ' + item['userName'] + ' - ' + item['instanceUrl'];
+    markup += '<li><a href="#item?id=' + item['id'] + '">' + display + '</a></li>';
   }
   content.html(markup);
   content.find(':jqmData(role=listview)').listview();
