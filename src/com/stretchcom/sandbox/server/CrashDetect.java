@@ -16,11 +16,11 @@ import com.google.appengine.api.datastore.Text;
 @NamedQueries({
     @NamedQuery(
     		name="CrashDetect.getAll",
-    		query="SELECT cd FROM CrashDetect cd ORDER BY cd.detectedDate DESC"
+    		query="SELECT cd FROM CrashDetect cd ORDER BY cd.detectedGmtDate DESC"
     ),
     @NamedQuery(
     		name="CrashDetect.getByStatus",
-    		query="SELECT cd FROM CrashDetect cd WHERE cd.status = :status"
+    		query="SELECT cd FROM CrashDetect cd WHERE cd.status = :status ORDER BY cd.detectedGmtDate DESC"
     ),
     @NamedQuery(
     		name="CrashDetect.getByKey",
@@ -34,7 +34,7 @@ public class CrashDetect {
 
 	private String summary;
 	// TODO support time zone and GMT for dates
-	private Date detectedDate;
+	private Date detectedGmtDate;
 	private String userName;
 	private Text stackDataBase64;
 	private String instanceUrl;
@@ -56,12 +56,12 @@ public class CrashDetect {
 		this.summary = summary;
 	}
 
-	public Date getDetectedDate() {
-		return detectedDate;
+	public Date getDetectedGmtDate() {
+		return detectedGmtDate;
 	}
 
-	public void setDetectedDate(Date detectedDate) {
-		this.detectedDate = detectedDate;
+	public void setDetectedGmtDate(Date detectedGmtDate) {
+		this.detectedGmtDate = detectedGmtDate;
 	}
 
 	public String getUserName() {

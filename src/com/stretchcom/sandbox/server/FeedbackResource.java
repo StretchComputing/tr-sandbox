@@ -3,6 +3,7 @@ package com.stretchcom.sandbox.server;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
@@ -106,13 +107,21 @@ public class FeedbackResource extends ServerResource {
 				feedback.setUserName(json.getString("userName"));
 			}
 			
-			if(json.has("recordedDate")) {
-				String recordedDateStr = json.getString("recordedDate");
-				Date gmtRecordedDate = GMT.stringToDate(recordedDateStr, null);
-				if(gmtRecordedDate == null) {
-					log.info("invalid reocrded date format passed in");
+			// TODO support a time zone passed in
+			if(json.has("date")) {
+				String recordedDateStr = json.getString("date");
+				
+				if(recordedDateStr != null || recordedDateStr.trim().length() != 0) {
+					TimeZone tz = GMT.getTimeZone(SandboxApplication.DEFAULT_LOCAL_TIME_ZONE);
+					Date gmtRecordedDate = GMT.convertToGmtDate(recordedDateStr, true, tz);
+					if(gmtRecordedDate == null) {
+						log.info("invalid recorded date format passed in");
+						apiStatus = ApiStatusCode.INVALID_RECORDED_DATE_PARAMETER;
+						jsonReturn.put("apiStatus", apiStatus);
+						return new JsonRepresentation(jsonReturn);
+					}
+					feedback.setRecordedGmtDate(gmtRecordedDate);
 				}
-				feedback.setRecordedDate(gmtRecordedDate);
 			}
 			
 			if(json.has("instanceUrl")) {
@@ -132,7 +141,7 @@ public class FeedbackResource extends ServerResource {
 			String baseUri = this.getRequest().getHostRef().getIdentifier();
 			this.getResponse().setLocationRef(baseUri + "/");
 
-			jsonReturn.put("feedbackId", keyWebStr);
+			jsonReturn.put("id", keyWebStr);
 		} catch (IOException e) {
 			log.severe("error extracting JSON object from Post");
 			e.printStackTrace();
@@ -176,11 +185,14 @@ public class FeedbackResource extends ServerResource {
 				.setParameter("key", feedbackKey)
 				.getSingleResult();
 
-    		jsonReturn.put("feedbackId", KeyFactory.keyToString(feedback.getKey()));
+    		jsonReturn.put("id", KeyFactory.keyToString(feedback.getKey()));
 			
-        	Date recordedDate = feedback.getRecordedDate();
+        	Date recordedDate = feedback.getRecordedGmtDate();
         	// TODO support time zones
-        	if(recordedDate != null) jsonReturn.put("recordedDate", GMT.convertToLocalDate(recordedDate, null, "EEE, MMM d, yyyy 'at' HH:mm a"));
+        	if(recordedDate != null) {
+        		TimeZone tz = GMT.getTimeZone(SandboxApplication.DEFAULT_LOCAL_TIME_ZONE);
+        		jsonReturn.put("date", GMT.convertToLocalDate(recordedDate, tz, SandboxApplication.INFO_DATE_FORMAT));
+        	}
         	
         	jsonReturn.put("userName", feedback.getUserName());
         	jsonReturn.put("instanceUrl", feedback.getInstanceUrl());
@@ -246,11 +258,14 @@ public class FeedbackResource extends ServerResource {
 			for (Feedback fb : feedbacks) {
 				JSONObject feedbackJsonObj = new JSONObject();
 				
-				feedbackJsonObj.put("feedbackId", KeyFactory.keyToString(fb.getKey()));
+				feedbackJsonObj.put("id", KeyFactory.keyToString(fb.getKey()));
 				
-            	Date recordedDate = fb.getRecordedDate();
+            	Date recordedDate = fb.getRecordedGmtDate();
             	// TODO support time zones
-            	if(recordedDate != null) feedbackJsonObj.put("recordedDate", GMT.convertToLocalDate(recordedDate, null, "EEE, MMM d 'at' HH:mm a"));
+            	if(recordedDate != null) {
+            		TimeZone tz = GMT.getTimeZone(SandboxApplication.DEFAULT_LOCAL_TIME_ZONE);
+            		feedbackJsonObj.put("date", GMT.convertToLocalDate(recordedDate, tz, SandboxApplication.LIST_DATE_FORMAT));
+            	}
             	
             	feedbackJsonObj.put("userName", fb.getUserName());
             	feedbackJsonObj.put("instanceUrl", fb.getInstanceUrl());

@@ -13,6 +13,8 @@ public class ApiStatusCode {
 	public static final String CLIENT_LOG_ID_REQUIRED = "302";
 	
 	public static final String INVALID_STATUS_PARAMETER = "400";
+	public static final String INVALID_RECORDED_DATE_PARAMETER = "401";
+	public static final String INVALID_DETECTED_DATE_PARAMETER = "402";
 
 	public static final String USER_NOT_FOUND = "600";
 	public static final String FEEDBACK_NOT_FOUND = "601";
